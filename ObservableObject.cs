@@ -3,11 +3,11 @@
     using System;
     using System.ComponentModel;
 
-    public class ObserableObject : INotifyPropertyChanged
+    public class ObservableObject : INotifyPropertyChanged
     {
         private readonly PropertyDictionary _properties;
 
-        public ObserableObject()
+        public ObservableObject()
         {
             _properties = new PropertyDictionary();
         }

@@ -1,22 +1,23 @@
 ﻿namespace Binding
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
 
     public class ObservableObject : INotifyPropertyChanged
     {
-        private readonly PropertyDictionary _properties;
-
         public ObservableObject()
         {
-            _properties = new PropertyDictionary();
+            Properties = new Dictionary<string, PropertyInfo>();
         }
 
+        public Dictionary<string, PropertyInfo> Properties { get; private set; }
+        
         public void RegisterProperty<T>(string name, Func<T> getter)
         {
             var property = new PropertyInfo<T>(name, getter);
 
-            _properties.Add(name, property);
+            Properties.Add(name, property);
         }
 
         public void RegisterProperty<T>(string name, Action<T> setter)
@@ -24,7 +25,7 @@
             var notifyingSetter = MakeNotifyingSetter(name, setter);
             var property = new PropertyInfo<T>(name, notifyingSetter);
 
-            _properties.Add(name, property);
+            Properties.Add(name, property);
         }
 
         public void RegisterProperty<T>(string name, Func<T> getter, Action<T> setter)
@@ -32,7 +33,7 @@
             var notifyingSetter = MakeNotifyingSetter(name, setter);
             var property = new PropertyInfo<T>(name, getter, notifyingSetter);
 
-            _properties.Add(name, property);
+            Properties.Add(name, property);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

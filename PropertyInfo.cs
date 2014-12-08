@@ -19,6 +19,7 @@ namespace Binding
         }
 
         public string Name { get; protected set; }
+        public Type Type { get; protected set; }
         public Func<object> Get { get; protected set; }
         public Action<PropertyInfo, object> Set { get; protected set; }
 
@@ -33,6 +34,7 @@ namespace Binding
             base.Name = name;
             base.Get = () => { return (object)getter(); };
 
+            Type = typeof(T);
             Get = getter;
         }
 
@@ -41,6 +43,7 @@ namespace Binding
             base.Name = name;
             base.Set = (property, value) => setter((PropertyInfo<T>)property, (T)value);
 
+            Type = typeof(T);
             Set = setter;
         }
 
@@ -50,6 +53,7 @@ namespace Binding
             base.Get = () => { return (object)getter(); };
             base.Set = (property, value) => setter((PropertyInfo<T>)property, (T)value);
 
+            Type = typeof(T);
             Get = getter;
             Set = setter;
         }

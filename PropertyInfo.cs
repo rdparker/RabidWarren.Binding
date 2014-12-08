@@ -16,6 +16,9 @@ namespace Binding
             Name = name;
             Get = getter;
             Set = setter;
+
+            CanGet = HasGetter;
+            CanSet = HasSetter;
         }
 
         public string Name { get; protected set; }
@@ -23,8 +26,11 @@ namespace Binding
         public Func<object> Get { get; protected set; }
         public Action<PropertyInfo, object> Set { get; protected set; }
 
-        public bool CanGet() { return Get != null; }
-        public bool CanSet() { return Set != null; }
+        public Func<bool> CanGet { get; set; }
+        public Func<bool> CanSet { get; set; }
+
+        public bool HasGetter() { return Get != null; }
+        public bool HasSetter() { return Set != null; }
     }
 
     public class PropertyInfo<T> : PropertyInfo

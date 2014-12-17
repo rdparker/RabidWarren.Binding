@@ -1,63 +1,41 @@
-﻿namespace Binding
+﻿// -----------------------------------------------------------------------
+//  <copyright file="ObservableObject.cs" company="Ron Parker">
+//   Copyright 2014 Ron Parker
+//  </copyright>
+//  <summary>
+//   Provides the base implementation for raising the PropertyChanged
+//   event.
+//  </summary>
+// -----------------------------------------------------------------------
+
+namespace Binding
 {
-    using System;
-    using System.Collections.Generic;
     using System.ComponentModel;
 
-    public class ObservableObject : INotifyPropertyChanged
+    /// <summary>
+    /// Provides the base implementation for raising the PropertyChanged event on objects which have properties that
+    /// act as binding sources.  Such an object is called an ObservableObject.
+    /// </summary>
+    public abstract class ObservableObject : IObservableObject
     {
-        public ObservableObject()
-        {
-            Properties = new Dictionary<string, PropertyInfo>();
-        }
-
-        public Dictionary<string, PropertyInfo> Properties { get; private set; }
-        
-        public void RegisterProperty<T>(string name, Func<T> getter)
-        {
-            var property = new PropertyInfo<T>(name, getter);
-
-            Properties.Add(name, property);
-        }
-
-        public void RegisterProperty<T>(string name, Action<T> setter)
-        {
-            var notifyingSetter = MakeNotifyingSetter(name, setter);
-            var property = new PropertyInfo<T>(name, notifyingSetter);
-
-            Properties.Add(name, property);
-        }
-
-        public void RegisterProperty<T>(string name, Func<T> getter, Action<T> setter)
-        {
-            var notifyingSetter = MakeNotifyingSetter(name, setter);
-            var property = new PropertyInfo<T>(name, getter, notifyingSetter);
-
-            Properties.Add(name, property);
-        }
-
+        /// <summary>
+        /// Occurs when a property value changes.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void RaisePropertyChangedEvent(string propertyName)
+        /// <summary>
+        /// Raises the property changed event.
+        /// </summary>
+        /// <param name="propertyName">The name of the property that was changed.</param>
+        public void OnPropertyChangedEvent(string propertyName)
         {
-            if (PropertyChanged != null)
+            // Avoid multithreaded race conditions where PropertyChanged could be updated between the test and
+            // the call.
+            var propertyChangedEvent = PropertyChanged;
+            if (propertyChangedEvent != null)
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                propertyChangedEvent(this, new PropertyChangedEventArgs(propertyName));
             }
-        }
-
-        private Action<PropertyInfo<T>, T> MakeNotifyingSetter<T>(string name, Action<T> setter)
-        {
-            return (PropertyInfo<T> property, T value) =>
-            {
-                if (value.Equals(property.Get()))
-                {
-                    return;
-                }
-
-                setter(value);
-                RaisePropertyChangedEvent(name);
-            };
         }
     }
 }

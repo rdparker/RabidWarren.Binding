@@ -1,98 +1,175 @@
-﻿namespace Binding
+﻿// -----------------------------------------------------------------------
+//  <copyright file="BindingObject.cs" company="Ron Parker">
+//   Copyright 2014 Ron Parker
+//  </copyright>
+//  <summary>
+//   Provides property binding services for an object.
+//  </summary>
+// -----------------------------------------------------------------------
+
+namespace Binding
 {
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
-    
+    using System.Linq;
+    using RabidWarren.Collections.Generic;
+
+    /// <summary>
+    /// Provides property binding services for an object.
+    /// </summary>
     public class BindingObject : ObservableObject
     {
-        private ObservableObject _dataContext;
-        private readonly Dictionary<string, string> _mappings = new Dictionary<string, string>();
+        /// <summary>
+        /// Mappings for this object's properties.
+        /// </summary>
+        private readonly Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<object, string>> _mappings =
+            new Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<object, string>>();
 
+        /// <summary>
+        /// The data context against which properties are bound.
+        /// </summary>
+        private ObservableObject _dataContext;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
+        /// </summary>
         public BindingObject()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
+        /// </summary>
+        /// <param name="dataContext">The data context, which acts as a source for bound properties.</param>
         public BindingObject(ObservableObject dataContext)
         {
-            DataContext = dataContext;
+            _dataContext = dataContext;
         }
 
-        public ObservableObject DataContext
+        /// <summary>
+        /// Finalizes an instance of the <see cref="BindingObject"/> class, unregistering it from all
+        /// <see cref="PropertyChanged"/> events.
+        /// </summary>
+        ~BindingObject()
         {
-            get { return _dataContext; }
-
-            set
+            // Unsubscribe from all source property notifications
+            foreach (var sourceObject in _mappings.Select(pair => pair.Key.Item1).Distinct())
             {
-                if (_dataContext != null)
-                {
-                    _dataContext.PropertyChanged -= DataContextPropertyChanged;
-                }
-
-                _dataContext = value;
-                _dataContext.PropertyChanged += DataContextPropertyChanged;
+                sourceObject.PropertyChanged -= SourcePropertyChangedHandler;
             }
         }
 
-        private void DataContextPropertyChanged(object sender, PropertyChangedEventArgs e)
+        /// <summary>
+        /// Binds the specified target property to the specified source property of the data context.
+        /// </summary>
+        /// <typeparam name="TTarget">The type of the target.</typeparam>
+        /// <param name="target">The target object.</param>
+        /// <param name="property">The target property.</param>
+        /// <param name="source">The source property.</param>
+        public void Bind<TTarget>(TTarget target, string property, string source)
         {
-            UpdateTargetFor(e.PropertyName);
+            Bind(target, property, _dataContext, source);
         }
 
-        private void UpdateTargetFor(string sourceName)
+        /// <summary>
+        /// Binds the named target property of the target object to the named source property of the source object.
+        /// </summary>
+        /// <typeparam name="TTarget">The type of the target object.</typeparam>
+        /// <typeparam name="TSource">The type of the source object.</typeparam>
+        /// <param name="targetObject">The target object.</param>
+        /// <param name="targetProperty">The name of the target property.</param>
+        /// <param name="sourceObject">The source object.</param>
+        /// <param name="sourceProperty">The name of the source source property.</param>
+        /// <exception cref="System.ArgumentException">
+        /// <paramref name="targetProperty"/> is not a registered property of <paramref name="targetObject"/>
+        /// or
+        /// <paramref name="sourceProperty"/> is not a registered property of <paramref name="sourceObject"/>
+        /// or
+        /// <paramref name="targetProperty"/> has already been bound.
+        /// </exception>
+        public void Bind<TTarget, TSource>(TTarget targetObject, string targetProperty, TSource sourceObject, string sourceProperty)
+            where TSource : INotifyPropertyChanged
         {
-            if (_mappings.ContainsKey(sourceName))
+            // Check pre-conditions.
+            var targetType = typeof(TTarget);
+            if (PropertyRegistry.Get(targetType, targetProperty) == null)
             {
-                var target = _mappings[sourceName];
-                var targetInfo = Properties[target];
-                var sourceInfo = _dataContext.Properties[sourceName];
-
-                if (targetInfo.Type == sourceInfo.Type)
-                {
-                    targetInfo.Set(targetInfo, sourceInfo.Get());
-                }
-                else
-                {
-                    var source = sourceInfo.Get();
-                    targetInfo.Set(targetInfo, source.ToString());
-                }
-            }
-        }
-
-        public void Bind(string dataContextProperty, string targetProperty)
-        {
-            if (!_dataContext.Properties.ContainsKey(dataContextProperty))
-            {
-                var message = String.Format("\"{0}\" is not registered property of the data context.", dataContextProperty);
-
-                throw new ArgumentException(message, "dataContextProperty");
-            }
-
-            if (!Properties.ContainsKey(targetProperty))
-            {
-                var message = String.Format("\"{0}\" is not a registered property of the binding object.", targetProperty);
+                var message = string.Format("{0} is not a registered property of the target object.", targetProperty);
 
                 throw new ArgumentException(message, "targetProperty");
             }
 
-            // Verify property compatability.
-            var targetType = Properties[targetProperty].Type;
-            if (targetType != typeof(string))
+            if (PropertyRegistry.Get(sourceObject.GetType(), sourceProperty) == null)
             {
-                var sourceType = _dataContext.Properties[dataContextProperty].Type;
-                if (targetType != sourceType)
-                {
-                    var message =
-                        String.Format("Cannot bind a {0} property to a {1} property", sourceType, targetType);
+                var message = string.Format("{0} is not a registered property of the source object.", sourceProperty);
 
-                    throw new ArgumentException(message);
-                }
+                throw new ArgumentException(message, "sourceProperty");
             }
 
-            _mappings.Add(dataContextProperty, targetProperty);
+            var noMatch = default(KeyValuePair<Tuple<INotifyPropertyChanged, string>, Tuple<object, string>>);
+            var mappedTarget = _mappings.FirstOrDefault(
+                pair =>
+                    object.ReferenceEquals(pair.Value.Item1, targetObject) &&
+                    pair.Value.Item2 == targetProperty);
 
-            // Set the initial value of the target property.
-            UpdateTargetFor(dataContextProperty);
+            if (!mappedTarget.Equals(noMatch))
+            {
+                var message = string.Format(
+                    "{0} is already bound.  A target property can only be bound once.", targetProperty);
+
+                throw new ArgumentException(message, "targetProperty");
+            }
+
+            // Subscribe to the source's PropertyChanged notification.
+            var mappedSource = _mappings.Any(pair => object.ReferenceEquals(pair.Value.Item1, sourceObject));
+            if (!mappedSource.Equals(noMatch))
+            {
+                sourceObject.PropertyChanged += SourcePropertyChangedHandler;
+            }
+
+            // Add the mapping.
+            var source = Tuple.Create((INotifyPropertyChanged)sourceObject, sourceProperty);
+            var target = Tuple.Create((object)targetObject, targetProperty);
+
+            _mappings.Add(source, target);
+
+            // Set the initial value
+            SourcePropertyChangedHandler(sourceObject, new PropertyChangedEventArgs(sourceProperty));
+        }
+
+        /// <summary>
+        /// Handles <see cref="PropertyChanged"/> events for the from bound sources.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The event arguments.</param>
+        private void SourcePropertyChangedHandler(object sender, PropertyChangedEventArgs e)
+        {
+            var source = Tuple.Create((INotifyPropertyChanged)sender, e.PropertyName);
+
+            ICollection<Tuple<object, string>> values;
+
+            if (_mappings.TryGetValues(source, out values))
+            {
+                foreach (var target in values)
+                {
+                    PropertyMetadata targetInfo = PropertyRegistry.Get(target.Item1.GetType(), target.Item2);
+                    PropertyMetadata sourceInfo = PropertyRegistry.Get(source.Item1.GetType(), source.Item2);
+                    var value = sourceInfo.Get(sender);
+
+                    if (targetInfo.Set != null)
+                    {
+                        if (targetInfo.Type == sourceInfo.Type)
+                        {
+                            targetInfo.Set(target.Item1, value);
+                        }
+                        else
+                        {
+                            targetInfo.Set(target.Item1, value.ToString());
+                        }
+                    }
+                }
+            }
         }
     }
 }

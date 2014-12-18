@@ -35,7 +35,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BindingConverter.cs" />
     <Compile Include="BindingObject.cs" />
+    <Compile Include="ConverterRegistry.cs" />
+    <Compile Include="IBindingConverter.cs" />
+    <Compile Include="IntegerConverter.cs" />
     <Compile Include="IObservableObject.cs" />
     <Compile Include="ObservableObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

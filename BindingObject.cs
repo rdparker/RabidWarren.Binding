@@ -32,6 +32,16 @@ namespace Binding
         private ObservableObject _dataContext;
 
         /// <summary>
+        /// Initializes the <see cref="BindingObject"/> class.
+        /// </summary>
+        static BindingObject()
+        {
+            // Register all of the BindingConverters which are defined in this assembly.  They will be used by 
+            // SourcePropertyChangedHandler below.
+            ConverterRegistry.RegisterAll(typeof(BindingObject).Assembly);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
         /// </summary>
         public BindingObject()
@@ -159,13 +169,27 @@ namespace Binding
 
                     if (targetInfo.Set != null)
                     {
+                        Type converterType;
+
                         if (targetInfo.Type == sourceInfo.Type)
                         {
                             targetInfo.Set(target.Item1, value);
                         }
-                        else
+                        else if (ConverterRegistry.Registry.TryGetValue(
+                            Tuple.Create(sourceInfo.Type, targetInfo.Type),
+                            out converterType))
                         {
-                            targetInfo.Set(target.Item1, value.ToString());
+                            var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+
+                            targetInfo.Set(target.Item1, converter.ConvertTo(value, targetInfo.Type, null));
+                        }
+                        else if (ConverterRegistry.Registry.TryGetValue(
+                            Tuple.Create(targetInfo.Type, sourceInfo.Type),
+                            out converterType))
+                        {
+                            var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+
+                            targetInfo.Set(target.Item1, converter.ConvertFrom(value, targetInfo.Type, null));
                         }
                     }
                 }

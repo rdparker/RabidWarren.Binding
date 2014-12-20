@@ -36,6 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BindingConverterAttribute.cs" />
+    <Compile Include="BindingConverter.cs" />
     <Compile Include="BindingObject.cs" />
     <Compile Include="ConverterRegistry.cs" />
     <Compile Include="IBindingConverter.cs" />

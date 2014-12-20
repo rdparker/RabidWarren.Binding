@@ -15,7 +15,7 @@ namespace Binding
     /// Converts between <see cref="int"/> and <see cref="string"/>.
     /// </summary>
     [BindingConverter(typeof(int), typeof(string))]
-    public class IntegerConverter : IBindingConverter
+    public class IntegerConverter : BindingConverter
     {
         /// <summary>
         /// Converts to a <see cref="string"/> from an <see cref="int"/>.
@@ -24,7 +24,7 @@ namespace Binding
         /// <param name="value">The value to convert.</param>
         /// <param name="targetType">The target conversion type.</param>
         /// <param name="parameter">A user-supplied parameter, which is ignored here.</param>
-        public object ConvertTo(object value, Type targetType, object parameter)
+        public override object ConvertTo(object value, Type targetType, object parameter)
         {
             var n = (int)value;
             return n.ToString();
@@ -37,7 +37,7 @@ namespace Binding
         /// <param name="value">The value to convert.</param>
         /// <param name="targetType">The target conversion type (string).</param>
         /// <param name="parameter">A user-supplied parameter, which is ignored here.</param>        
-        public object ConvertFrom(object value, Type targetType, object parameter)
+        public override object ConvertFrom(object value, Type targetType, object parameter)
         {
             var strValue = value as string;
             int result;
@@ -47,7 +47,7 @@ namespace Binding
                 return result;
             }
 
-            return null;
+            return NoValue;
         }
     }
 }

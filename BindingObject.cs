@@ -183,9 +183,13 @@ namespace Binding
                 Tuple.Create(sourceInfo.Type, targetInfo.Type),
                 out converterType))
             {
-                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+                var converter = (BindingConverter)Activator.CreateInstance(converterType);
+                var targetValue = converter.ConvertTo(value, targetInfo.Type, null);
 
-                targetInfo.Set(target, converter.ConvertTo(value, targetInfo.Type, null));
+                if (!object.ReferenceEquals(targetValue, BindingConverter.NoValue))
+                {
+                    targetInfo.Set(target, targetValue);
+                }
             }
         }
 
@@ -198,9 +202,13 @@ namespace Binding
                 Tuple.Create(targetInfo.Type, sourceInfo.Type),
                 out converterType))
             {
-                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+                var converter = (BindingConverter)Activator.CreateInstance(converterType);
+                var targetValue = converter.ConvertFrom(value, targetInfo.Type, null);
 
-                targetInfo.Set(target, converter.ConvertFrom(value, targetInfo.Type, null));
+                if (!object.ReferenceEquals(targetValue, BindingConverter.NoValue))
+                {
+                    targetInfo.Set(target, targetValue);
+                }
             }
         }
 

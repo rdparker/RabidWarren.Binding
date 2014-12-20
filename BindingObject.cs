@@ -42,11 +42,11 @@ namespace Binding
         private ObservableObject _dataContext;
 
         /// <summary>
-        /// Initializes the <see cref="BindingObject"/> class.
+        /// Initializes static members of the <see cref="BindingObject"/> class.
         /// </summary>
         static BindingObject()
         {
-            // Register all of the BindingConverters which are defined in this assembly.  They will be used by 
+            // Register all of the BindingConverter types which are defined in this assembly.  They will be used by 
             // SourcePropertyChangedHandler below.
             ConverterRegistry.RegisterAll(typeof(BindingObject).Assembly);
         }
@@ -174,6 +174,36 @@ namespace Binding
             SourcePropertyChangedHandler(sourceObject, new PropertyChangedEventArgs(sourceProperty));
         }
 
+        private static void ConvertToTarget(
+            object target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
+        {
+            Type converterType;
+
+            if (ConverterRegistry.Registry.TryGetValue(
+                Tuple.Create(sourceInfo.Type, targetInfo.Type),
+                out converterType))
+            {
+                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+
+                targetInfo.Set(target, converter.ConvertTo(value, targetInfo.Type, null));
+            }
+        }
+
+        private static void ConvertFromTarget(
+            object target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
+        {
+            Type converterType;
+
+            if (ConverterRegistry.Registry.TryGetValue(
+                Tuple.Create(targetInfo.Type, sourceInfo.Type),
+                out converterType))
+            {
+                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+
+                targetInfo.Set(target, converter.ConvertFrom(value, targetInfo.Type, null));
+            }
+        }
+
         /// <summary>
         /// Handles <see cref="PropertyChanged"/> events for the from bound sources.
         /// </summary>
@@ -201,7 +231,9 @@ namespace Binding
         /// <param name="sender">The sender</param>
         /// <param name="e">The event arguments.</param>
         /// <param name="convert">The conversion function.</param>
-        private void ProcessPropertyChangedEvent(object sender, PropertyChangedEventArgs e, 
+        private void ProcessPropertyChangedEvent(
+            object sender,
+            PropertyChangedEventArgs e, 
             Action<INotifyPropertyChanged, PropertyMetadata, PropertyMetadata, object> convert)
         {
             var source = Tuple.Create((INotifyPropertyChanged)sender, e.PropertyName);
@@ -228,36 +260,6 @@ namespace Binding
                         }
                     }
                 }
-            }
-        }
-
-        private static void ConvertToTarget(
-            INotifyPropertyChanged target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
-        {
-            Type converterType;
-
-            if (ConverterRegistry.Registry.TryGetValue(
-                Tuple.Create(sourceInfo.Type, targetInfo.Type),
-                out converterType))
-            {
-                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
-
-                targetInfo.Set(target, converter.ConvertTo(value, targetInfo.Type, null));
-            }
-        }
-
-        private static void ConvertFromTarget(
-            INotifyPropertyChanged target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
-        {
-            Type converterType;
-
-            if (ConverterRegistry.Registry.TryGetValue(
-                Tuple.Create(targetInfo.Type, sourceInfo.Type),
-                out converterType))
-            {
-                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
-
-                targetInfo.Set(target, converter.ConvertFrom(value, targetInfo.Type, null));
             }
         }
     }

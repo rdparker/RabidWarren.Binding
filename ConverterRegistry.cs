@@ -1,36 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿// -----------------------------------------------------------------------
+//  <copyright file="ConverterRegistry.cs" company="Ron Parker">
+//   Copyright 2014 Ron Parker
+//  </copyright>
+//  <summary>
+//   Provides a registry of binding converter classes.
+//  </summary>
+// -----------------------------------------------------------------------
 
 namespace Binding
 {
-    using RabidWarren.Collections.Generic;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
-    public class ConverterRegistry
+    /// <summary>
+    /// Houses the binding converter registry.
+    /// </summary>
+    public static class ConverterRegistry
     {
-        // Map the source type and target type to the converter type.
-        internal static Dictionary<Tuple<Type, Type>, Type> Registry = new Dictionary<Tuple<Type,Type>,Type>();
+        /// <summary>
+        /// Maps the source type and target type to the converter type.
+        /// </summary>
+        internal static Dictionary<Tuple<Type, Type>, Type> Registry = new Dictionary<Tuple<Type, Type>, Type>();
 
+        /// <summary>
+        /// Registers all of the binding converters found within <paramref name="assembly"/>.
+        /// <para>Binding converters are classes which have the <see cref="Binding.BindingConverterAttribute"/>.  They
+        /// must implement the <see cref="Binding.IBindingConverter"/> interface.</para>
+        /// </summary>
+        /// <param name="assembly">The assembly containing the binding converters.</param>
         public static void RegisterAll(Assembly assembly)
         {
-
-
-            //&&
-            //        x.IsSubclassOf(typeof(IBindingConverter)));
-
-            //foreach (var converter in converters)
-            //{
-            //    foreach (var attribute in converter.GetCustomAttributes(typeof(BindingConverterAttribute), false))
-            //    {
-            //        var binding = (BindingConverterAttribute)attribute;
-            //        Registry.Add(
-            //            Tuple.Create(binding.SourceType, binding.TargetType),
-            //            converter);
-            //    }
-            //}
-
             var entries = from converter in assembly.GetTypes()
                           where converter.IsPublic && !converter.IsInterface && !converter.IsAbstract
                           let interfaces = converter.GetInterfaces()
@@ -41,7 +42,8 @@ namespace Binding
                           select new { binding.SourceType, binding.TargetType, converter };
 
             foreach (var entry in entries)
-                Registry.Add(Tuple.Create(entry.SourceType, entry.TargetType),
+                Registry.Add(
+                    Tuple.Create(entry.SourceType, entry.TargetType),
                     entry.converter);
         }
     }

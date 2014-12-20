@@ -23,8 +23,18 @@ namespace Binding
         /// <summary>
         /// Mappings for this object's properties.
         /// </summary>
-        private readonly Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<object, string>> _mappings =
-            new Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<object, string>>();
+        private readonly Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>
+            _mappings = new Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>();
+
+        /// <summary>
+        /// The source objects whose <see cref="PropertyChanged"/> event has been subscribed to.
+        /// </summary>
+        private readonly List<INotifyPropertyChanged> _sourceObjects = new List<INotifyPropertyChanged>();
+
+        /// <summary>
+        /// The target objects whose <see cref="PropertyChanged"/> event has been subscribed to.
+        /// </summary>
+        private readonly List<INotifyPropertyChanged> _targetObjects = new List<INotifyPropertyChanged>();
 
         /// <summary>
         /// The data context against which properties are bound.
@@ -64,9 +74,15 @@ namespace Binding
         ~BindingObject()
         {
             // Unsubscribe from all source property notifications
-            foreach (var sourceObject in _mappings.Select(pair => pair.Key.Item1).Distinct())
+            foreach (var source in _sourceObjects)
             {
-                sourceObject.PropertyChanged -= SourcePropertyChangedHandler;
+                source.PropertyChanged -= SourcePropertyChangedHandler;
+            }
+
+            // Unsubscribe from all target property notifications
+            foreach (var target in _sourceObjects)
+            {
+                target.PropertyChanged -= TargetPropertyChangedHandler;
             }
         }
 
@@ -78,6 +94,7 @@ namespace Binding
         /// <param name="property">The target property.</param>
         /// <param name="source">The source property.</param>
         public void Bind<TTarget>(TTarget target, string property, string source)
+            where TTarget : INotifyPropertyChanged
         {
             Bind(target, property, _dataContext, source);
         }
@@ -99,6 +116,7 @@ namespace Binding
         /// <paramref name="targetProperty"/> has already been bound.
         /// </exception>
         public void Bind<TTarget, TSource>(TTarget targetObject, string targetProperty, TSource sourceObject, string sourceProperty)
+            where TTarget : INotifyPropertyChanged
             where TSource : INotifyPropertyChanged
         {
             // Check pre-conditions.
@@ -117,7 +135,7 @@ namespace Binding
                 throw new ArgumentException(message, "sourceProperty");
             }
 
-            var noMatch = default(KeyValuePair<Tuple<INotifyPropertyChanged, string>, Tuple<object, string>>);
+            var noMatch = default(KeyValuePair<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>);
             var mappedTarget = _mappings.FirstOrDefault(
                 pair =>
                     object.ReferenceEquals(pair.Value.Item1, targetObject) &&
@@ -131,18 +149,26 @@ namespace Binding
                 throw new ArgumentException(message, "targetProperty");
             }
 
-            // Subscribe to the source's PropertyChanged notification.
-            var mappedSource = _mappings.Any(pair => object.ReferenceEquals(pair.Value.Item1, sourceObject));
-            if (!mappedSource.Equals(noMatch))
+            // Make sure we have subscribed to the source's PropertyChanged notification.
+            if (!_sourceObjects.Any(x => object.ReferenceEquals(x, sourceObject)))
             {
                 sourceObject.PropertyChanged += SourcePropertyChangedHandler;
+                _sourceObjects.Add(sourceObject);
             }
 
-            // Add the mapping.
+            // Make sure we have subscribed to the targets's PropertyChanged notification.
+            if (!_targetObjects.Any(x => object.ReferenceEquals(x, targetObject)))
+            {
+                targetObject.PropertyChanged += TargetPropertyChangedHandler;
+                _targetObjects.Add(targetObject);
+            }
+
+            // Create mappings between the source and target properties.
             var source = Tuple.Create((INotifyPropertyChanged)sourceObject, sourceProperty);
-            var target = Tuple.Create((object)targetObject, targetProperty);
+            var target = Tuple.Create((INotifyPropertyChanged)targetObject, targetProperty);
 
             _mappings.Add(source, target);
+            _mappings.Add(target, source);
 
             // Set the initial value
             SourcePropertyChangedHandler(sourceObject, new PropertyChangedEventArgs(sourceProperty));
@@ -155,9 +181,32 @@ namespace Binding
         /// <param name="e">The event arguments.</param>
         private void SourcePropertyChangedHandler(object sender, PropertyChangedEventArgs e)
         {
+            ProcessPropertyChangedEvent(sender, e, ConvertToTarget);
+        }
+
+        /// <summary>
+        /// Handles <see cref="PropertyChanged"/> events for the from bound targets.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The event arguments.</param>
+        private void TargetPropertyChangedHandler(object sender, PropertyChangedEventArgs e)
+        {
+            ProcessPropertyChangedEvent(sender, e, ConvertFromTarget);
+        }
+
+        /// <summary>
+        /// Copies a value between properties during a <see cref="PropertyChanged"/> event using the given
+        /// conversion function.
+        /// </summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="e">The event arguments.</param>
+        /// <param name="convert">The conversion function.</param>
+        private void ProcessPropertyChangedEvent(object sender, PropertyChangedEventArgs e, 
+            Action<INotifyPropertyChanged, PropertyMetadata, PropertyMetadata, object> convert)
+        {
             var source = Tuple.Create((INotifyPropertyChanged)sender, e.PropertyName);
 
-            ICollection<Tuple<object, string>> values;
+            ICollection<Tuple<INotifyPropertyChanged, string>> values;
 
             if (_mappings.TryGetValues(source, out values))
             {
@@ -169,30 +218,46 @@ namespace Binding
 
                     if (targetInfo.Set != null)
                     {
-                        Type converterType;
-
                         if (targetInfo.Type == sourceInfo.Type)
                         {
                             targetInfo.Set(target.Item1, value);
                         }
-                        else if (ConverterRegistry.Registry.TryGetValue(
-                            Tuple.Create(sourceInfo.Type, targetInfo.Type),
-                            out converterType))
+                        else
                         {
-                            var converter = (IBindingConverter)Activator.CreateInstance(converterType);
-
-                            targetInfo.Set(target.Item1, converter.ConvertTo(value, targetInfo.Type, null));
-                        }
-                        else if (ConverterRegistry.Registry.TryGetValue(
-                            Tuple.Create(targetInfo.Type, sourceInfo.Type),
-                            out converterType))
-                        {
-                            var converter = (IBindingConverter)Activator.CreateInstance(converterType);
-
-                            targetInfo.Set(target.Item1, converter.ConvertFrom(value, targetInfo.Type, null));
+                            convert(target.Item1, targetInfo, sourceInfo, value);
                         }
                     }
                 }
+            }
+        }
+
+        private static void ConvertToTarget(
+            INotifyPropertyChanged target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
+        {
+            Type converterType;
+
+            if (ConverterRegistry.Registry.TryGetValue(
+                Tuple.Create(sourceInfo.Type, targetInfo.Type),
+                out converterType))
+            {
+                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+
+                targetInfo.Set(target, converter.ConvertTo(value, targetInfo.Type, null));
+            }
+        }
+
+        private static void ConvertFromTarget(
+            INotifyPropertyChanged target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
+        {
+            Type converterType;
+
+            if (ConverterRegistry.Registry.TryGetValue(
+                Tuple.Create(targetInfo.Type, sourceInfo.Type),
+                out converterType))
+            {
+                var converter = (IBindingConverter)Activator.CreateInstance(converterType);
+
+                targetInfo.Set(target, converter.ConvertFrom(value, targetInfo.Type, null));
             }
         }
     }

@@ -11,6 +11,7 @@ namespace Binding
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using RabidWarren.Collections.Generic;
 
     /// <summary>
@@ -48,10 +49,11 @@ namespace Binding
         /// <typeparam name="TValue">The type of the property value.</typeparam>
         /// <param name="name">The name of the property.</param>
         /// <param name="setter">The the function for setting the property's value in the given object</param>
-        public static void Add<TObject, TValue>(string name, Action<TObject, TValue> setter)
+        /// <returns>The property's metadata.</returns>
+        public static PropertyMetadata Add<TObject, TValue>(string name, Action<TObject, TValue> setter)
             where TObject : class
         {
-            Add(name, null, setter);
+            return Add(name, null, setter);
         }
 
         /// <summary>
@@ -65,27 +67,97 @@ namespace Binding
         /// <param name="getter">The the function for getting the property's value from the object that
         /// contains it.</param>
         /// <param name="setter">The the function for setting the property's value in the given object</param>
-        public static void Add<TObject, TValue>(
+        /// <returns>The property's metadata.</returns>
+        public static PropertyMetadata Add<TObject, TValue>(
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
         {
-            AddInternal(name, getter, setter);
+            var metadata = AddInternal(name, getter, setter);
+
             AddInternal(name + ".IsGettable", (TObject x) => getter != null, null);
             AddInternal(name + ".IsSettable", (TObject x) => setter != null, null);
+
+            return metadata;
         }
-        
+
         /// <summary>
         /// Gets the <see cref="Binding.PropertyMetadata"/> for the specified object type's named property.
         /// </summary>
         /// <param name="type">The type of the object containing the property.</param>
         /// <param name="name">The name of the property.</param>
         /// <returns>The metadata for the specified property.</returns>
+        /// <exception cref="AmbiguousMatchException">More than one property is found with the specified name.
+        /// </exception>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <c>null</c>.</exception>
         public static PropertyMetadata Get(Type type, string name)
         {
             ICollection<PropertyMetadata> values;
 
-            return Registry.TryGetValues(type, out values) ? 
-                values.FirstOrDefault(metadata => metadata.Name == name) : null;
+            if (Registry.TryGetValues(type, out values))
+            {
+                var metadata = values.FirstOrDefault(x => x.Name == name);
+
+                if (metadata != null)
+                    return metadata;
+            }
+
+            PropertyInfo sourceInfo;
+            try
+            {
+                sourceInfo = type.GetProperty(name);
+            }
+            catch (AmbiguousMatchException)
+            {
+                // Try disambiguating properties that are overridden using the "new" keyword.
+                sourceInfo = type.GetProperty(name, BindingFlags.DeclaredOnly);
+            }
+
+            return AddInternal(sourceInfo);
+        }
+
+        /// <summary>
+        /// Creates a notifying setter if possible and adds the property to the property registry.
+        /// <para>This is called internally for properties which have been discovered by reflection.</para>
+        /// </summary>
+        /// <param name="property">The <see cref="System.Reflection.PropertyInfo"/> for the property.</param>
+        /// <returns>The property's metadata.</returns>
+        private static PropertyMetadata AddInternal(PropertyInfo property)
+        {
+            var name = property.Name;
+            var getMethod = property.GetGetMethod();
+            var setMethod = property.GetSetMethod();
+            var ownerType = property.ReflectedType;
+
+            var getter = getMethod == null ? (Func<object, object>)null : o => getMethod.Invoke(o, null);
+
+            Action<object, object> setter;
+
+            if (setMethod == null)
+                setter = (Action<object, object>)null;
+            else
+            if (typeof(IObservableObject).IsAssignableFrom(ownerType))
+            {
+                setter = MakeObservableObjectNotifyingSetter(
+                    name, 
+                    getter, 
+                    (o, value) => setMethod.Invoke(o, new[] { value }));
+            }
+            else
+            {
+                setter = MakeNotifyingSetter(name, getter, (o, value) => setMethod.Invoke(o, new[] { value }));
+            }
+
+            var metadata = new PropertyMetadata
+            {
+                Type = property.PropertyType,
+                Name = name,
+                Get = getter,
+                Set = setter
+            };
+
+            Registry.Add(ownerType, metadata);
+
+            return metadata;
         }
 
         /// <summary>
@@ -100,7 +172,8 @@ namespace Binding
         /// <param name="getter">The the function for getting the property's value from the object that
         /// contains it.</param>
         /// <param name="setter">The the function for setting the property's value in the given object</param>
-        private static void AddInternal<TObject, TValue>(
+        /// <returns>The property's metadata.</returns>
+        private static PropertyMetadata AddInternal<TObject, TValue>(
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
         {
@@ -108,21 +181,23 @@ namespace Binding
             ICollection<PropertyMetadata> values;
 
             if (Registry.TryGetValues(type, out values) &&
-                values.FirstOrDefault(metadata => metadata.Name == name) != null)
+                values.FirstOrDefault(x => x.Name == name) != null)
             {
                 var message = string.Format("The {1} for {0} has already been registered.", name, type.FullName);
                 throw new ArgumentException(message);
             }
 
-            Registry.Add(
-                typeof(TObject),
-                new PropertyMetadata
+            var metadata = new PropertyMetadata
                 {
                     Type = typeof(TValue),
                     Name = name,
                     Get = getter == null ? (Func<object, object>)null : o => getter((TObject)o),
                     Set = setter == null ? (Action<object, object>)null : MakeNotifyingSetter(name, getter, setter)
-                });
+                };
+
+            Registry.Add(typeof(TObject), metadata);
+
+            return metadata;
         }
 
         /// <summary>
@@ -184,7 +259,7 @@ namespace Binding
         /// <returns>A notifying setter.</returns>
         private static Action<object, object> MakeObservableObjectNotifyingSetter<TObject, TValue>(
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
-            where TObject : class, IObservableObject
+            where TObject : class
         {
             // NOTE:  If two un-gettable properties were to be bidirectionally bound to each other, it would result in
             //        infinite recursion.
@@ -192,16 +267,16 @@ namespace Binding
             {
                 return (propertyOwner, value) =>
                 {
-                    var owner = (TObject)propertyOwner;
+                    var owner = (IObservableObject)propertyOwner;
 
-                    setter(owner, (TValue)value);
+                    setter((TObject)propertyOwner, (TValue)value);
                     owner.OnPropertyChangedEvent(name);
                 };
             }
 
             return (propertyOwner, value) =>
             {
-                var owner = propertyOwner as TObject;
+                var owner = (TObject)propertyOwner;
 
                 if (value.Equals(getter(owner)))
                 {
@@ -209,7 +284,7 @@ namespace Binding
                 }
 
                 setter(owner, (TValue)value);
-                owner.OnPropertyChangedEvent(name);
+                ((IObservableObject)propertyOwner).OnPropertyChangedEvent(name);
             };
         }
     }

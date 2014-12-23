@@ -130,7 +130,7 @@ namespace Binding
 
             if (PropertyRegistry.Get(sourceObject.GetType(), sourceProperty) == null)
             {
-                var message = string.Format("{0} is not a registered property of the source object.", sourceProperty);
+                var message = string.Format("{0} is not a public property of the source object.", sourceProperty);
 
                 throw new ArgumentException(message, "sourceProperty");
             }

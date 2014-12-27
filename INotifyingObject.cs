@@ -1,10 +1,10 @@
 ﻿// -----------------------------------------------------------------------
-//  <copyright file="IObservableObject.cs" company="Ron Parker">
+//  <copyright file="INotifyingObject.cs" company="Ron Parker">
 //   Copyright 2014 Ron Parker
 //  </copyright>
 //  <summary>
-//   Defines the intereface for observable objects.  They must raise the
-//   PropertyChanged event.
+//   Defines an extended interface for objects that implement
+//   INotifyPropertyChange.
 //  </summary>
 // -----------------------------------------------------------------------
 
@@ -15,7 +15,7 @@ namespace Binding
     /// <summary>
     /// Raises the PropertyChanged event.
     /// </summary>
-    public interface IObservableObject : INotifyPropertyChanged
+    public interface INotifyingObject : INotifyPropertyChanged
     {
         /// <summary>
         /// Raises the property changed event event.

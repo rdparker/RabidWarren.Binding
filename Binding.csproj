@@ -41,11 +41,12 @@
     <Compile Include="ConverterRegistry.cs" />
     <Compile Include="IBindingConverter.cs" />
     <Compile Include="IntegerConverter.cs" />
-    <Compile Include="IObservableObject.cs" />
-    <Compile Include="ObservableObject.cs" />
+    <Compile Include="INotifyingObject.cs" />
+    <Compile Include="NotifyingObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyMetadata.cs" />
-    <Compile Include="PropertyRegistry.cs" />
+    <Compile Include="Property.cs" />
+    <Compile Include="PropertyPath.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

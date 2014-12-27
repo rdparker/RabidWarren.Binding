@@ -13,12 +13,13 @@ namespace Binding
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
+    using System.Reflection;
     using RabidWarren.Collections.Generic;
 
     /// <summary>
     /// Provides property binding services for an object.
     /// </summary>
-    public class BindingObject : ObservableObject
+    public class BindingObject : NotifyingObject
     {
         /// <summary>
         /// Mappings for this object's properties.
@@ -39,7 +40,7 @@ namespace Binding
         /// <summary>
         /// The data context against which properties are bound.
         /// </summary>
-        private ObservableObject _dataContext;
+        private NotifyingObject _dataContext;
 
         /// <summary>
         /// Initializes static members of the <see cref="BindingObject"/> class.
@@ -62,7 +63,7 @@ namespace Binding
         /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
         /// </summary>
         /// <param name="dataContext">The data context, which acts as a source for bound properties.</param>
-        public BindingObject(ObservableObject dataContext)
+        public BindingObject(NotifyingObject dataContext)
         {
             _dataContext = dataContext;
         }
@@ -80,7 +81,7 @@ namespace Binding
             }
 
             // Unsubscribe from all target property notifications
-            foreach (var target in _sourceObjects)
+            foreach (var target in _targetObjects)
             {
                 target.PropertyChanged -= TargetPropertyChangedHandler;
             }
@@ -99,79 +100,79 @@ namespace Binding
             Bind(target, property, _dataContext, source);
         }
 
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Binds the named target property of the target object to the named source property of the source object.
+        /// Binds the target object's named property to the source object's named property.
         /// </summary>
-        /// <typeparam name="TTarget">The type of the target object.</typeparam>
-        /// <typeparam name="TSource">The type of the source object.</typeparam>
-        /// <param name="targetObject">The target object.</param>
-        /// <param name="targetProperty">The name of the target property.</param>
-        /// <param name="sourceObject">The source object.</param>
-        /// <param name="sourceProperty">The name of the source source property.</param>
-        /// <exception cref="System.ArgumentException">
-        /// <paramref name="targetProperty"/> is not a registered property of <paramref name="targetObject"/>
-        /// or
-        /// <paramref name="sourceProperty"/> is not a registered property of <paramref name="sourceObject"/>
-        /// or
-        /// <paramref name="targetProperty"/> has already been bound.
-        /// </exception>
+        ///
+        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
+        ///
+        /// <exception cref="ArgumentException">        Thrown when one or more arguments have
+        ///                                             unsupported or illegal values. </exception>
+        /// <exception cref="System.ArgumentException"> Passed when one of the properties has not been
+        ///                                             registered or when
+        ///                                             <paramref name="targetProperty"/> has already
+        ///                                             been bound. </exception>
+        ///
+        /// <typeparam name="TTarget">  The type of the target object. </typeparam>
+        /// <typeparam name="TSource">  The type of the source object. </typeparam>
+        /// <param name="targetObject">     The target object. </param>
+        /// <param name="targetProperty">   The name of the target property. </param>
+        /// <param name="sourceObject">     The source object. </param>
+        /// <param name="sourceProperty">   The name of the source source property. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public void Bind<TTarget, TSource>(TTarget targetObject, string targetProperty, TSource sourceObject, string sourceProperty)
             where TTarget : INotifyPropertyChanged
             where TSource : INotifyPropertyChanged
         {
+            var targetNotifiable = (INotifyPropertyChanged)targetObject;
+            var sourceNotifiable = (INotifyPropertyChanged)sourceObject;
+            PropertyPath.FindLeafNotifiable(ref targetNotifiable, ref targetProperty);
+            PropertyPath.FindLeafNotifiable(ref sourceNotifiable, ref sourceProperty);
+
             // Check pre-conditions.
-            var targetType = typeof(TTarget);
-            if (PropertyRegistry.Get(targetType, targetProperty) == null)
-            {
-                var message = string.Format("{0} is not a registered property of the target object.", targetProperty);
+            var targetType = targetNotifiable.GetType();
+            if (Property.Find(targetType, targetProperty) == null)
+                throw new ArgumentException("Cannot bind to an unregistered property.", "targetProperty");
 
-                throw new ArgumentException(message, "targetProperty");
-            }
-
-            if (PropertyRegistry.Get(sourceObject.GetType(), sourceProperty) == null)
-            {
-                var message = string.Format("{0} is not a public property of the source object.", sourceProperty);
-
-                throw new ArgumentException(message, "sourceProperty");
-            }
+            if (Property.Find(sourceNotifiable.GetType(), sourceProperty) == null)
+                throw new ArgumentException("Cannot bind to an unregistered property.", "sourceProperty");
 
             var noMatch = default(KeyValuePair<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>);
             var mappedTarget = _mappings.FirstOrDefault(
                 pair =>
-                    object.ReferenceEquals(pair.Value.Item1, targetObject) &&
+                    object.ReferenceEquals(pair.Value.Item1, targetNotifiable) &&
                     pair.Value.Item2 == targetProperty);
 
             if (!mappedTarget.Equals(noMatch))
-            {
-                var message = string.Format(
-                    "{0} is already bound.  A target property can only be bound once.", targetProperty);
-
-                throw new ArgumentException(message, "targetProperty");
-            }
+                throw new ArgumentException("A target property can only be bound once.", "targetProperty");
 
             // Make sure we have subscribed to the source's PropertyChanged notification.
-            if (!_sourceObjects.Any(x => object.ReferenceEquals(x, sourceObject)))
+            if (!_sourceObjects.Any(x => object.ReferenceEquals(x, sourceNotifiable)))
             {
-                sourceObject.PropertyChanged += SourcePropertyChangedHandler;
-                _sourceObjects.Add(sourceObject);
+                sourceNotifiable.PropertyChanged += SourcePropertyChangedHandler;
+                _sourceObjects.Add(sourceNotifiable);
             }
 
             // Make sure we have subscribed to the targets's PropertyChanged notification.
-            if (!_targetObjects.Any(x => object.ReferenceEquals(x, targetObject)))
+            if (!_targetObjects.Any(x => object.ReferenceEquals(x, targetNotifiable)))
             {
-                targetObject.PropertyChanged += TargetPropertyChangedHandler;
-                _targetObjects.Add(targetObject);
+                targetNotifiable.PropertyChanged += TargetPropertyChangedHandler;
+                _targetObjects.Add(targetNotifiable);
             }
 
             // Create mappings between the source and target properties.
-            var source = Tuple.Create((INotifyPropertyChanged)sourceObject, sourceProperty);
-            var target = Tuple.Create((INotifyPropertyChanged)targetObject, targetProperty);
+            var source = Tuple.Create(sourceNotifiable, sourceProperty);
+            var target = Tuple.Create(targetNotifiable, targetProperty);
 
             _mappings.Add(source, target);
             _mappings.Add(target, source);
 
             // Set the initial value
-            SourcePropertyChangedHandler(sourceObject, new PropertyChangedEventArgs(sourceProperty));
+            //
+            // Note: If more than one target is bound to the same source, some target's will receive multiple
+            //       notifications.
+            SourcePropertyChangedHandler(sourceNotifiable, new PropertyChangedEventArgs(sourceProperty));
         }
 
         private static void ConvertToTarget(
@@ -232,16 +233,20 @@ namespace Binding
             ProcessPropertyChangedEvent(sender, e, ConvertFromTarget);
         }
 
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Copies a value between properties during a <see cref="PropertyChanged"/> event using the given
-        /// conversion function.
+        /// Copies a value between properties during a changed event using the given conversion function.
         /// </summary>
-        /// <param name="sender">The sender</param>
-        /// <param name="e">The event arguments.</param>
-        /// <param name="convert">The conversion function.</param>
+        ///
+        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
+        ///
+        /// <param name="sender">   The sender. </param>
+        /// <param name="e">        The event arguments. </param>
+        /// <param name="convert">  The conversion function. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         private void ProcessPropertyChangedEvent(
             object sender,
-            PropertyChangedEventArgs e, 
+            PropertyChangedEventArgs e,
             Action<INotifyPropertyChanged, PropertyMetadata, PropertyMetadata, object> convert)
         {
             var source = Tuple.Create((INotifyPropertyChanged)sender, e.PropertyName);
@@ -252,8 +257,8 @@ namespace Binding
             {
                 foreach (var target in values)
                 {
-                    PropertyMetadata targetInfo = PropertyRegistry.Get(target.Item1.GetType(), target.Item2);
-                    PropertyMetadata sourceInfo = PropertyRegistry.Get(source.Item1.GetType(), source.Item2);
+                    PropertyMetadata targetInfo = Property.Find(target.Item1.GetType(), target.Item2);
+                    PropertyMetadata sourceInfo = Property.Find(source.Item1.GetType(), source.Item2);
                     var value = sourceInfo.Get(sender);
 
                     if (targetInfo.Set != null)

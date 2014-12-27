@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-//  <copyright file="ObservableObject.cs" company="Ron Parker">
+//  <copyright file="NotifyingObject.cs" company="Ron Parker">
 //   Copyright 2014 Ron Parker
 //  </copyright>
 //  <summary>
@@ -14,9 +14,9 @@ namespace Binding
 
     /// <summary>
     /// Provides the base implementation for raising the PropertyChanged event on objects which have properties that
-    /// act as binding sources.  Such an object is called an ObservableObject.
+    /// act as binding sources.
     /// </summary>
-    public abstract class ObservableObject : IObservableObject
+    public abstract class NotifyingObject : INotifyingObject
     {
         /// <summary>
         /// Occurs when a property value changes.

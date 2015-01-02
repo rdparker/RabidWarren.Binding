@@ -24,19 +24,6 @@ namespace Binding
     {
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Specifies the order of precedence when searching for properties via reflection.  NonPublic
-        /// properties are included because Visual Studio creates WPF controls as private fields.
-        /// </summary>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        private static readonly BindingFlags[] visibilityPrecedence = {
-            BindingFlags.Static   | BindingFlags.Public,
-            BindingFlags.Instance | BindingFlags.Public,
-            BindingFlags.Static   | BindingFlags.NonPublic,
-            BindingFlags.Instance | BindingFlags.NonPublic
-        };
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
         /// Takes an object and a property path and decends into the path until the first match is found,
         /// updating the object and path reference with the match.
         /// </summary>
@@ -54,7 +41,7 @@ namespace Binding
 
             for (int i = 0; i < path.Count() - 1; i++)
             {
-                var child = GetProperty(obj, path[i]);
+                var child = Property.GetReflected(obj, path[i]);
 
                 if (predicate(child))
                 {
@@ -84,47 +71,6 @@ namespace Binding
             Func<object, bool> predicate = (o) => { return (o as INotifyPropertyChanged) == null; };
 
             FindChild(ref obj, ref propertyPath, predicate);
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Gets the value of a property using reflection. </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 12/27/2014. </remarks>
-        ///
-        /// <param name="obj">  The object the property belongs to. </param>
-        /// <param name="name"> The property's name. </param>
-        ///
-        /// <returns>   The property's value. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        private static object GetProperty(object obj, string name)
-        {
-            Type type = obj.GetType();
-
-            // Loop through visibility levels from most visible to least visible.
-            foreach (var visibility in visibilityPrecedence)
-            {
-                // Prefer C# properties first.
-                var property = type.GetProperty(name, visibility);
-                if (property != null)
-                {
-                    var getter = property.GetGetMethod(visibility.HasFlag(BindingFlags.NonPublic));
-                    if (getter != null)
-                        return getter.Invoke(obj, null);
-                }
-
-                // Next come get methods.
-                var getMethod = type.GetMethod("get_" + name, visibility);
-                if (getMethod != null)
-                    return getMethod.Invoke(obj, null);
-
-                // Finally, check for fields.
-                var field = type.GetField(name, visibility);
-                if (field != null)
-                    return field.GetValue(obj);
-            }
-
-            // No match was found.
-            return null;
         }
     }
 }

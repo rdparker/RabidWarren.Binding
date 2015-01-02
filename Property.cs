@@ -11,9 +11,8 @@ namespace Binding
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using RabidWarren.Collections.Generic;
-    using System.ComponentModel;
     using System.Reflection;
+    using RabidWarren.Collections.Generic;
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>
@@ -27,6 +26,20 @@ namespace Binding
     {
         /// <summary>   Maps class names to lists of properties. </summary>
         private static readonly Multimap<Type, PropertyMetadata> Registry = new Multimap<Type, PropertyMetadata>();
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Specifies the order of precedence when searching for properties via reflection.  NonPublic
+        /// properties are included because Visual Studio creates WPF controls as private fields.
+        /// </summary>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        private static readonly BindingFlags[] visibilityPrecedence =
+        {
+            BindingFlags.Static   | BindingFlags.Public,
+            BindingFlags.Instance | BindingFlags.Public,
+            BindingFlags.Static   | BindingFlags.NonPublic,
+            BindingFlags.Instance | BindingFlags.NonPublic
+        };
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Registers the named property and its setter for binding. </summary>
@@ -104,7 +117,7 @@ namespace Binding
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static PropertyMetadata Find(Type type, string name)
         {
-            PropertyMetadata metadata = null;
+            PropertyMetadata metadata;
             ICollection<PropertyMetadata> values;
 
             // Try to lookup the property in the registry.
@@ -117,21 +130,11 @@ namespace Binding
             }
 
             // If it wasn't found in he registry, try locating it via reflection.
-            System.Reflection.PropertyInfo sourceInfo;
-            try
+            metadata = FromPropertyInfo(type, name) ?? FromMethods(type, name) ?? FromField(type, name);
+            if (metadata == null)
             {
-                sourceInfo = type.GetProperty(name);
-            }
-            catch (System.Reflection.AmbiguousMatchException)
-            {
-                // Try disambiguating properties that are overridden using the "new" keyword.
-                sourceInfo = type.GetProperty(name, System.Reflection.BindingFlags.DeclaredOnly);
-            }
-
-            // Support the pseudo-properties, CanRead and CanWrite, similar to the same properties
-            // of PropertyInfo.
-            if (sourceInfo == null)
-            {
+                // Support the pseudo-properties, CanRead and CanWrite, similar to the same properties
+                // of PropertyInfo.
                 var elts = name.Split('.');
                 if (elts.Length == 2)
                 {
@@ -141,6 +144,7 @@ namespace Binding
                     if (elts[1] == "CanWrite")
                         return Register(type, name, Find(type, elts[0]).Set != null);
                 }
+
                 if (elts.Length >= 2)
                 {
                     var outer = Find(type, elts[0]);
@@ -154,13 +158,17 @@ namespace Binding
                     var innerType = inner.Type;
 
                     // TODO: Use a notifying setter and check invalid number field on focus loss.
-                    //       Also remove other explicitly registered properties.
                     metadata = new PropertyMetadata {
                         Type = innerType,
                         Name = name,
-                        Get = (o) => innerGet(outerGet(o)),
-                        Set = (o, value) => innerSet(outerGet(o), value)
+                        Get = o => innerGet(outerGet(o))
                     };
+
+                    metadata.Set = MakeNotifyingSetter(
+                        name, 
+                        metadata.Get, 
+                        (o, value) => innerSet(outerGet(o), value));
+
                     Registry.Add(outerType, metadata);
 
                     return metadata;
@@ -168,7 +176,50 @@ namespace Binding
             }
 
             // If it was found, cache the discovered information in the registry; otherwise, return null. 
-            return sourceInfo == null ? null : AddInternal(sourceInfo);
+            if (metadata != null)
+                Registry.Add(type, metadata);
+
+            return metadata;
+        }
+
+        private static PropertyMetadata ToMetadata(this PropertyInfo property)
+        {
+            var name = property.Name;
+            var getMethod = property.GetGetMethod();
+            var setMethod = property.GetSetMethod();
+            var ownerType = property.ReflectedType;
+
+            // Create a PropertyMetadata.Get function from the get method, if any.
+            var getter =
+                getMethod == null ?
+                (Func<object, object>)null : o => getMethod.Invoke(o, null);
+
+            // Create a PropertyMetadata.Set function from the set method, if any.
+            Action<object, object> simpleSetter = null;
+            if (setMethod != null)
+                simpleSetter = (o, value) => setMethod.Invoke(o, new[] { value });
+
+            Action<object, object> setter = MakeSmartSetter(ownerType, name, getter, simpleSetter);
+
+            return new PropertyMetadata
+            {
+                Type = property.PropertyType,
+                Name = name,
+                Get = getter,
+                Set = setter
+            };
+        }
+
+        private static Action<object, object> MakeSmartSetter(Type ownerType, string name, Func<object,object> getter, Action<object, object> simpleSetter)
+        {
+            Action<object, object> smartSetter =
+                (simpleSetter == null)
+                    ? null :
+                typeof(INotifyingObject).IsAssignableFrom(ownerType)
+                    ? MakeNotifyingSetter(name, getter, simpleSetter)
+                    : MakeSmartSetter(name, getter, simpleSetter);
+
+            return smartSetter;
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,63 +242,10 @@ namespace Binding
             {
                 Type = typeof(TValue),
                 Name = name,
-                Get = (_) => value
+                Get = _ => value
             };
 
             Registry.Add(type, metadata);
-
-            return metadata;
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// Creates a notifying setter if possible and adds the property to the property registry.
-        /// <para>This is called internally for properties which have been discovered by
-        /// reflection.</para>
-        /// </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
-        ///
-        /// <param name="property"> The <see cref="System.Reflection.PropertyInfo"/> for the property. </param>
-        ///
-        /// <returns>   The property's metadata. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        private static PropertyMetadata AddInternal(System.Reflection.PropertyInfo property)
-        {
-            var name = property.Name;
-            var getMethod = property.GetGetMethod();
-            var setMethod = property.GetSetMethod();
-            var ownerType = property.ReflectedType;
-
-            // Create a PropertyMetadata.Get function from the get method, if any.
-            var getter =
-                getMethod == null ?
-                (Func<object, object>)null : o => getMethod.Invoke(o, null);
-
-            // Create a PropertyMetadata.Set function from the set method, if any.
-            //
-            // Note: MakeSmartSetter will normally call MakeNotifyingSetter when needed, but it cannot do that in this
-            //       case.  It checks whether or not the inferred TObject type of the getter and setter is assignable
-            //       to INotifyingObject, which in other usages, it is.  However, in this case TObject is just a
-            //       generic System.Object, which is not assignable to INotifyingObject. So, that logic is duplicated
-            //       here where the actual type can be checked.
-            Action<object, object> simpleSetter = (o, value) => setMethod.Invoke(o, new[] { value });
-            Action<object, object> smartSetter =
-                (setMethod == null)
-                    ? smartSetter = null :
-                (typeof(INotifyingObject).IsAssignableFrom(ownerType))
-                    ? MakeNotifyingSetter(name, getter, simpleSetter)
-                    : MakeSmartSetter(name, getter, simpleSetter);
-
-            var metadata = new PropertyMetadata
-            {
-                Type = property.PropertyType,
-                Name = name,
-                Get = getter,
-                Set = smartSetter
-            };
-
-            Registry.Add(ownerType, metadata);
 
             return metadata;
         }
@@ -304,6 +302,148 @@ namespace Binding
             }
 
             return (propertyOwner, value) => setter((TObject)propertyOwner, (TValue)value);
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets the value of a property using reflection. </summary>
+        ///
+        /// <remarks>   Last edited by Ron, 12/27/2014. </remarks>
+        ///
+        /// <param name="obj">  The object the property belongs to. </param>
+        /// <param name="name"> The property's name. </param>
+        ///
+        /// <returns>   The property's value. </returns>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        public static object GetReflected(object obj, string name)
+        {
+            return Property.GetReflectedGetMethod(obj.GetType(), name)(obj);
+        }
+
+        public static Func<object, object> GetReflectedGetMethod(Type type, string name)
+        {
+            // Loop through visibility levels from most visible to least visible.
+            foreach (var visibility in visibilityPrecedence)
+            {
+                // Prefer C# properties first.
+                PropertyInfo info = GetPropertyInfo(type, name, visibility);
+                if (info != null)
+                {
+                    var getter = info.GetGetMethod(visibility.HasFlag(BindingFlags.NonPublic));
+                    if (getter != null)
+                        return o => getter.Invoke(o, null);
+                }
+
+                // Next come get methods.
+                var getMethod = type.GetMethod("get_" + name, visibility);
+                if (getMethod != null)
+                    return o => getMethod.Invoke(o, null);
+
+                // Finally, check for fields.
+                var field = type.GetField(name, visibility);
+                if (field != null)
+                    return field.GetValue;
+            }
+
+            // No match was found.
+            return null;
+        }
+
+        private static PropertyMetadata FromPropertyInfo(Type type, string name)
+        {
+            foreach (var visibility in visibilityPrecedence)
+            {
+                PropertyInfo info = GetPropertyInfo(type, name, visibility);
+                if (info != null)
+                    return info.ToMetadata();
+            }
+
+            return null;
+        }
+
+        private static PropertyMetadata FromMethods(Type type, string name)
+        {
+            var metadata = new PropertyMetadata
+            {
+                Name = name
+            };
+            
+            // Find the get method, if any.
+            foreach (var visibility in visibilityPrecedence)
+            {
+                var getMethod = type.GetMethod("get_" + name, visibility);
+                if (getMethod != null)
+                {
+                    metadata.Get = o => getMethod.Invoke(o, null);
+                    metadata.Type = getMethod.ReturnType;
+                    break;
+                }
+            }
+
+            // Find the set method, if any.
+            foreach (var visibility in visibilityPrecedence)
+            {
+                var setMethod = type.GetMethod("set_" + name, visibility);
+                if (setMethod != null)
+                {
+                    metadata.Set = (o, value) => setMethod.Invoke(o, new[] { value });
+
+                    // If there is no getter, get the type from the setter's parameters.
+                    if (metadata.Type == null)
+                    {
+                        var parameters = setMethod.GetParameters();
+
+                        // Whether this is a regular property or an indexer, the value type is always last.
+                        metadata.Type = parameters.Last().GetType();
+                    }
+
+                    break;
+                }
+            }
+
+            return metadata.Type == null ? null : metadata;
+        }
+
+        private static PropertyMetadata FromField(Type type, string name)
+        {
+            var metadata = new PropertyMetadata
+            {
+                Name = name
+            };
+         
+            FieldInfo field;
+            foreach (var visibility in visibilityPrecedence)
+            {
+                field = type.GetField(name, visibility);
+
+                if (field != null)
+                {
+                    return new PropertyMetadata
+                    {
+                        Type = field.FieldType,
+                        Name = name,
+                        Get = field.GetValue,
+                        Set = MakeSmartSetter(type, name, field.GetValue, field.SetValue)
+                    };
+                }
+            }
+
+            return null;
+        }
+        
+        private static PropertyInfo GetPropertyInfo(Type type, string name, BindingFlags visibility)
+        {
+            PropertyInfo info;
+            try
+            {
+                info = type.GetProperty(name, visibility);
+            }
+            catch (AmbiguousMatchException)
+            {
+                // Try disambiguating properties that are overridden using the "new" keyword.
+                info = type.GetProperty(name, visibility | BindingFlags.DeclaredOnly);
+            }
+
+            return info;
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////

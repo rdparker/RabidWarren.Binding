@@ -1,6 +1,6 @@
 ﻿// -----------------------------------------------------------------------
 //  <copyright file="BindingObject.cs" company="Ron Parker">
-//   Copyright 2014 Ron Parker
+//   Copyright 2014, 2015 Ron Parker
 //  </copyright>
 //  <summary>
 //   Provides property binding services for an object.
@@ -13,44 +13,51 @@ namespace Binding
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
-    using System.Reflection;
     using RabidWarren.Collections.Generic;
 
-    /// <summary>
-    /// Provides property binding services for an object.
-    /// </summary>
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary> Represents an object that binds its properties to other objects. </summary>
+    ///
+    /// <remarks>
+    /// Due to the single inheritance nature of C#, it may be necessary for a class to include a
+    /// BindingObject as a member, rather than deriving from the class itself.  As a convenience a
+    /// NotifyingObject data context may be passed to the constructor, simplifying multiple calls to
+    /// <see cref="Bind"/>.
+    /// </remarks>
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////
     public class BindingObject : NotifyingObject
     {
         /// <summary>
-        /// Mappings for this object's properties.
+        /// Bindings that this object has established to other object's properties.
         /// </summary>
-        private readonly Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>
-            _mappings = new Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>();
+        /// <remarks>
+        /// The keys and values have the same type, <see cref="Tuple{INotifyPropertyChanged, string}"/>.  This contains
+        /// two elements, the object that contains the property and the path from the object to the property.
+        /// <para>
+        /// A property path may be the name of a property which is directly owned by the object or a dotted path to a
+        /// property.  For example, if an object has a Text property its path would be "Text", but if it has a TextBox
+        /// control with a Text property, the path would be "TextBox.Text".
+        /// </para></remarks>
+        readonly Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>
+            _bindings = new Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>();
 
         /// <summary>
-        /// The source objects whose <see cref="PropertyChanged"/> event has been subscribed to.
+        /// Tracks the source objects whose <see cref="PropertyChanged"/> event has been subscribed to.
         /// </summary>
-        private readonly List<INotifyPropertyChanged> _sourceObjects = new List<INotifyPropertyChanged>();
+        readonly List<INotifyPropertyChanged> _sourceObjects = new List<INotifyPropertyChanged>();
 
         /// <summary>
-        /// The target objects whose <see cref="PropertyChanged"/> event has been subscribed to.
+        /// Tracks the target objects whose <see cref="PropertyChanged"/> event has been subscribed to.
+        /// <para>
+        /// Normally this will just be the <see cref="BindingObject"/>, but if <see cref="Bind"/> is passed a property
+        /// path which passes through another object that supports <see cref="INotifyPropertyChanged"/> the binding
+        /// system may use it as a target.
+        /// </para>
         /// </summary>
-        private readonly List<INotifyPropertyChanged> _targetObjects = new List<INotifyPropertyChanged>();
+        readonly List<INotifyPropertyChanged> _targetObjects = new List<INotifyPropertyChanged>();
 
-        /// <summary>
-        /// The data context against which properties are bound.
-        /// </summary>
-        private NotifyingObject _dataContext;
-
-        /// <summary>
-        /// Initializes static members of the <see cref="BindingObject"/> class.
-        /// </summary>
-        static BindingObject()
-        {
-            // Register all of the BindingConverter types which are defined in this assembly.  They will be used by 
-            // SourcePropertyChangedHandler below.
-            ConverterRegistry.RegisterAll(typeof(BindingObject).Assembly);
-        }
+        /// <summary> The optional source object used by the short form of <see cref="Bind"/>. </summary>
+        NotifyingObject _sourceObject;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
@@ -62,10 +69,10 @@ namespace Binding
         /// <summary>
         /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
         /// </summary>
-        /// <param name="dataContext">The data context, which acts as a source for bound properties.</param>
-        public BindingObject(NotifyingObject dataContext)
+        /// <param name="sourceObject">The object which acts as a source for bound properties.</param>
+        public BindingObject(NotifyingObject sourceObject)
         {
-            _dataContext = dataContext;
+            _sourceObject = sourceObject;
         }
 
         /// <summary>
@@ -87,17 +94,23 @@ namespace Binding
             }
         }
 
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Binds the specified target property to the specified source property of the data context.
+        /// Binds the specified target property to the specified source property using the source object
+        /// that was passed to <see cref="M:BindingObject(NotifyingObject)"/>.
         /// </summary>
-        /// <typeparam name="TTarget">The type of the target.</typeparam>
-        /// <param name="target">The target object.</param>
-        /// <param name="property">The target property.</param>
-        /// <param name="source">The source property.</param>
+        ///
+        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
+        ///
+        /// <typeparam name="TTarget">  The type of the target. </typeparam>
+        /// <param name="target">   The target object. </param>
+        /// <param name="property"> The target property. </param>
+        /// <param name="source">   The source property. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public void Bind<TTarget>(TTarget target, string property, string source)
             where TTarget : INotifyPropertyChanged
         {
-            Bind(target, property, _dataContext, source);
+            Bind(target, property, _sourceObject, source);
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,12 +120,8 @@ namespace Binding
         ///
         /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
         ///
-        /// <exception cref="ArgumentException">        Thrown when one or more arguments have
-        ///                                             unsupported or illegal values. </exception>
-        /// <exception cref="System.ArgumentException"> Passed when one of the properties has not been
-        ///                                             registered or when
-        ///                                             <paramref name="targetProperty"/> has already
-        ///                                             been bound. </exception>
+        /// <exception cref="ArgumentException">    Thrown when one or more arguments have unsupported or
+        ///                                         illegal values. </exception>
         ///
         /// <typeparam name="TTarget">  The type of the target object. </typeparam>
         /// <typeparam name="TSource">  The type of the source object. </typeparam>
@@ -139,23 +148,23 @@ namespace Binding
                 throw new ArgumentException("Cannot bind to an unregistered property.", "sourceProperty");
 
             var noMatch = default(KeyValuePair<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>);
-            var mappedTarget = _mappings.FirstOrDefault(
+            var mappedTarget = _bindings.FirstOrDefault(
                 pair =>
-                    object.ReferenceEquals(pair.Value.Item1, targetNotifiable) &&
+                    ReferenceEquals(pair.Value.Item1, targetNotifiable) &&
                     pair.Value.Item2 == targetProperty);
 
             if (!mappedTarget.Equals(noMatch))
                 throw new ArgumentException("A target property can only be bound once.", "targetProperty");
 
             // Make sure we have subscribed to the source's PropertyChanged notification.
-            if (!_sourceObjects.Any(x => object.ReferenceEquals(x, sourceNotifiable)))
+            if (!_sourceObjects.Any(x => ReferenceEquals(x, sourceNotifiable)))
             {
                 sourceNotifiable.PropertyChanged += SourcePropertyChangedHandler;
                 _sourceObjects.Add(sourceNotifiable);
             }
 
             // Make sure we have subscribed to the targets's PropertyChanged notification.
-            if (!_targetObjects.Any(x => object.ReferenceEquals(x, targetNotifiable)))
+            if (!_targetObjects.Any(x => ReferenceEquals(x, targetNotifiable)))
             {
                 targetNotifiable.PropertyChanged += TargetPropertyChangedHandler;
                 _targetObjects.Add(targetNotifiable);
@@ -165,8 +174,8 @@ namespace Binding
             var source = Tuple.Create(sourceNotifiable, sourceProperty);
             var target = Tuple.Create(targetNotifiable, targetProperty);
 
-            _mappings.Add(source, target);
-            _mappings.Add(target, source);
+            _bindings.Add(source, target);
+            _bindings.Add(target, source);
 
             // Set the initial value
             //
@@ -175,67 +184,93 @@ namespace Binding
             SourcePropertyChangedHandler(sourceNotifiable, new PropertyChangedEventArgs(sourceProperty));
         }
 
-        private static void ConvertToTarget(
-            object target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Updates the binding target property by converting the source value to the target's type.
+        /// </summary>
+        ///
+        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
+        ///
+        /// <param name="owner">        The target property owner. </param>
+        /// <param name="targetInfo">   Information describing the target property. </param>
+        /// <param name="sourceType">   The type of the source property. </param>
+        /// <param name="value">        The current source property value. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        static void UpdateTarget(object owner, PropertyMetadata targetInfo, Type sourceType, object value)
         {
-            Type converterType;
+            var converterType = ConverterRegistry.Find(sourceType, targetInfo.Type);
 
-            if (ConverterRegistry.Registry.TryGetValue(
-                Tuple.Create(sourceInfo.Type, targetInfo.Type),
-                out converterType))
+            if (converterType != null)
             {
                 var converter = (BindingConverter)Activator.CreateInstance(converterType);
                 var targetValue = converter.ConvertTo(value, targetInfo.Type, null);
 
-                if (!object.ReferenceEquals(targetValue, BindingConverter.NoValue))
+                if (!ReferenceEquals(targetValue, BindingConverter.NoValue))
                 {
-                    targetInfo.Set(target, targetValue);
+                    targetInfo.Set(owner, targetValue);
                 }
             }
-        }
-
-        private static void ConvertFromTarget(
-            object target, PropertyMetadata targetInfo, PropertyMetadata sourceInfo, object value)
-        {
-            Type converterType;
-
-            if (ConverterRegistry.Registry.TryGetValue(
-                Tuple.Create(targetInfo.Type, sourceInfo.Type),
-                out converterType))
-            {
-                var converter = (BindingConverter)Activator.CreateInstance(converterType);
-                var targetValue = converter.ConvertFrom(value, targetInfo.Type, null);
-
-                if (!object.ReferenceEquals(targetValue, BindingConverter.NoValue))
-                {
-                    targetInfo.Set(target, targetValue);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Handles <see cref="PropertyChanged"/> events for the from bound sources.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="e">The event arguments.</param>
-        private void SourcePropertyChangedHandler(object sender, PropertyChangedEventArgs e)
-        {
-            ProcessPropertyChangedEvent(sender, e, ConvertToTarget);
-        }
-
-        /// <summary>
-        /// Handles <see cref="PropertyChanged"/> events for the from bound targets.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="e">The event arguments.</param>
-        private void TargetPropertyChangedHandler(object sender, PropertyChangedEventArgs e)
-        {
-            ProcessPropertyChangedEvent(sender, e, ConvertFromTarget);
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Copies a value between properties during a changed event using the given conversion function.
+        /// Updates the binding source property from the target's value using the appropriate binding
+        /// converter.
+        /// </summary>
+        ///
+        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
+        ///
+        /// <param name="owner">        The source property owner. </param>
+        /// <param name="sourceInfo">   Information describing the source. </param>
+        /// <param name="targetType">   The type of the binding target property. </param>
+        /// <param name="value">        The current target property value. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        static void UpdateSource(object owner, PropertyMetadata sourceInfo, Type targetType, object value)
+        {
+            var converterType = ConverterRegistry.Find(sourceInfo.Type, targetType);
+
+            if (converterType != null)
+            {
+                var converter = (BindingConverter)Activator.CreateInstance(converterType);
+                var sourceValue = converter.ConvertFrom(value, sourceInfo.Type, null);
+
+                if (!ReferenceEquals(sourceValue, BindingConverter.NoValue))
+                {
+                    sourceInfo.Set(owner, sourceValue);
+                }
+            }
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Handles <see cref="PropertyChanged"/> events from bound sources. </summary>
+        ///
+        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
+        ///
+        /// <param name="sender">   The sender. </param>
+        /// <param name="e">        The event arguments. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        void SourcePropertyChangedHandler(object sender, PropertyChangedEventArgs e)
+        {
+            ProcessPropertyChangedEvent(sender, e, UpdateTarget);
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Handles <see cref="PropertyChanged"/> events from bound targets. </summary>
+        ///
+        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
+        ///
+        /// <param name="sender">   The sender. </param>
+        /// <param name="e">        The event arguments. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        void TargetPropertyChangedHandler(object sender, PropertyChangedEventArgs e)
+        {
+            ProcessPropertyChangedEvent(sender, e, UpdateSource);
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Copies a value between properties during a property changed event using the given conversion
+        /// function.
         /// </summary>
         ///
         /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
@@ -244,16 +279,16 @@ namespace Binding
         /// <param name="e">        The event arguments. </param>
         /// <param name="convert">  The conversion function. </param>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        private void ProcessPropertyChangedEvent(
+        void ProcessPropertyChangedEvent(
             object sender,
             PropertyChangedEventArgs e,
-            Action<INotifyPropertyChanged, PropertyMetadata, PropertyMetadata, object> convert)
+            Action<INotifyPropertyChanged, PropertyMetadata, Type, object> convert)
         {
             var source = Tuple.Create((INotifyPropertyChanged)sender, e.PropertyName);
 
             ICollection<Tuple<INotifyPropertyChanged, string>> values;
 
-            if (_mappings.TryGetValues(source, out values))
+            if (_bindings.TryGetValues(source, out values))
             {
                 foreach (var target in values)
                 {
@@ -269,7 +304,7 @@ namespace Binding
                         }
                         else
                         {
-                            convert(target.Item1, targetInfo, sourceInfo, value);
+                            convert(target.Item1, targetInfo, sourceInfo.Type, value);
                         }
                     }
                 }

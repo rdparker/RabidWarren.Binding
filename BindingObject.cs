@@ -7,7 +7,7 @@
 //  </summary>
 // -----------------------------------------------------------------------
 
-namespace Binding
+namespace RabidWarren.Binding
 {
     using System;
     using System.Collections.Generic;

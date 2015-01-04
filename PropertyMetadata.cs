@@ -1,6 +1,6 @@
 ﻿// -----------------------------------------------------------------------
 //  <copyright file="PropertyMetadata.cs" company="Ron Parker">
-//   Copyright 2014 Ron Parker
+//   Copyright 2014, 2015 Ron Parker
 //  </copyright>
 //  <summary>
 //    Provides access to basic property metadata and functions for
@@ -8,7 +8,7 @@
 //  </summary>
 // -----------------------------------------------------------------------
 
-namespace Binding
+namespace RabidWarren.Binding
 {
     using System;
 

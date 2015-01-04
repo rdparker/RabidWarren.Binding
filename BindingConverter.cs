@@ -1,13 +1,13 @@
 ﻿// -----------------------------------------------------------------------
 //  <copyright file="BindingConverter.cs" company="Ron Parker">
-//   Copyright 2014 Ron Parker
+//   Copyright 2014, 2015 Ron Parker
 //  </copyright>
 //  <summary>
 //   Provides a base implementation for binding converters.
 //  </summary>
 // -----------------------------------------------------------------------
 
-namespace Binding
+namespace RabidWarren.Binding
 {
     using System;
 

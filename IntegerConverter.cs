@@ -1,13 +1,13 @@
 ﻿// -----------------------------------------------------------------------
 //  <copyright file="IntegerConverter.cs" company="Ron Parker">
-//   Copyright 2014 Ron Parker
+//   Copyright 2014, 2015 Ron Parker
 //  </copyright>
 //  <summary>
 //   Converts back and forth between an integer and a string.
 //  </summary>
 // -----------------------------------------------------------------------
 
-namespace Binding
+namespace RabidWarren.Binding
 {
     using System;
 

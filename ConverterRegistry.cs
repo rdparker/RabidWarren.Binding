@@ -1,13 +1,13 @@
 ﻿// -----------------------------------------------------------------------
 //  <copyright file="ConverterRegistry.cs" company="Ron Parker">
-//   Copyright 2014 Ron Parker
+//   Copyright 2014, 2015 Ron Parker
 //  </copyright>
 //  <summary>
 //   Provides a registry of binding converter classes.
 //  </summary>
 // -----------------------------------------------------------------------
 
-namespace Binding
+namespace RabidWarren.Binding
 {
     using System;
     using System.Collections.Generic;

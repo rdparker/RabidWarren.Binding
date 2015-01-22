@@ -56,7 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="RabidWarren.Collections">
-      <HintPath>packages\RabidWarren.Collections.1.0.5497.34194\lib\portable-net45+sl50+win+wpa81+wp80+MonoAndroid10+xamarinios10+MonoTouch10\RabidWarren.Collections.dll</HintPath>
+      <HintPath>packages\RabidWarren.Collections.1.0.5499.35758\lib\portable-net45+sl50+win+wpa81+wp80+MonoAndroid10+xamarinios10+MonoTouch10\RabidWarren.Collections.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

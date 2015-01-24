@@ -16,6 +16,7 @@
 
         public bool IsReadable { get; set; }
         public bool IsWritable { get; set; }
+        public string Text { get; set; }
 
         [SetUp]
         public void Setup()
@@ -73,6 +74,15 @@
             _view.Bind(this, "IsReadable", _viewModel, "UnreadableText.CanRead");
 
             Assert.False(IsReadable);
+        }
+
+        // Test than an unreadable property can be set.
+        [Test]
+        public void CanSetUnreadableProperty()
+        {
+            _view.Bind(this, "Text", _viewModel, "UnreadableText");
+
+            Text = "Hiya";
         }
 
         // Test the CanWrite pseudo-property returning false.

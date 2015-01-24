@@ -14,6 +14,8 @@ namespace RabidWarren.Binding
     using System.Linq;
     using System.Reflection;
     using RabidWarren.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>
@@ -545,6 +547,10 @@ namespace RabidWarren.Binding
             return info;
         }
 
+
+
+
+
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Makes a notifying setter for objects that support the <see cref="INotifyingObject"/>
@@ -563,6 +569,9 @@ namespace RabidWarren.Binding
         ///
         /// <returns>   A notifying setter. </returns>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        [SuppressMessage("Potential Code Quality Issues", "CompareNonConstrainedGenericWithNullIssue",
+            Justification =
+            "The if in this function guards against generating a comparison against null for value types.")]
         static Action<object, object> MakeNotifyingSetter<TObject, TValue>(
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
@@ -580,11 +589,33 @@ namespace RabidWarren.Binding
                 };
             }
 
+            if (typeof(TValue).IsValueType)
+            {
+                return (propertyOwner, value) =>
+                {
+                    var owner = (TObject)propertyOwner;
+
+                    if (value.Equals(getter(owner)))
+                    {
+                        return;
+                    }
+
+                    setter(owner, (TValue)value);
+                    ((INotifyingObject)propertyOwner).OnPropertyChangedEvent(name);
+                };
+            }
+
             return (propertyOwner, value) =>
             {
                 var owner = (TObject)propertyOwner;
 
-                if (value.Equals(getter(owner)))
+                TValue oldValue = getter(owner);
+                if (value == null)
+                {
+                    if (oldValue == null)
+                        return;
+                }
+                else if (value.Equals(getter(owner)))
                 {
                     return;
                 }

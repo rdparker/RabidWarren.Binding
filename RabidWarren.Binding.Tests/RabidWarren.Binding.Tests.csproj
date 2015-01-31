@@ -81,7 +81,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\NR6Pack.0.5.0.0\tools\analyzers\NR6Pack.dll" />
+    <Analyzer Include="..\packages\NR6Pack.0.6.0.0\tools\analyzers\NR6Pack.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

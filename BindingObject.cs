@@ -121,7 +121,8 @@ namespace RabidWarren.Binding
         /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
         ///
         /// <exception cref="ArgumentException">    Thrown when one or more arguments have unsupported or
-        ///                                         illegal values. </exception>
+        ///                                         illegal values. Or, when a source property is not
+        ///                                         readable.</exception>
         ///
         /// <typeparam name="TTarget">  The type of the target object. </typeparam>
         /// <typeparam name="TSource">  The type of the source object. </typeparam>
@@ -144,8 +145,11 @@ namespace RabidWarren.Binding
             if (Property.Find(targetType, targetProperty) == null)
                 throw new ArgumentException("Cannot bind to an unregistered property.", "targetProperty");
 
-            if (Property.Find(sourceNotifiable.GetType(), sourceProperty) == null)
+            var sourceMetadata = Property.Find(sourceNotifiable.GetType(), sourceProperty);
+            if (sourceMetadata == null)
                 throw new ArgumentException("Cannot bind to an unregistered property.", "sourceProperty");
+            if (sourceMetadata.Get == null)
+                throw new ArgumentException("A source property must be readable.", "sourceProperty");
 
             var noMatch = default(KeyValuePair<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>);
             var mappedTarget = _bindings.FirstOrDefault(

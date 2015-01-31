@@ -504,7 +504,8 @@ namespace RabidWarren.Binding
             if (setMethod != null)
                 simpleSetter = (o, value) => setMethod.Invoke(o, new[] { value });
 
-            Action<object, object> setter = MakeSmartSetter(ownerType, name, getter, simpleSetter);
+            Action<object, object> setter =
+                getter == null ? simpleSetter : MakeSmartSetter(ownerType, name, getter, simpleSetter);
 
             return new PropertyMetadata
             {
@@ -548,7 +549,8 @@ namespace RabidWarren.Binding
         /// interface.
         /// </summary>
         ///
-        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
+        /// <exception cref="ArgumentNullException">    Thrown when <paramref name="getter"/> or
+        ///                                             <paramref name="setter"/> is <c>null</c>.</exception>
         ///
         /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
         /// <typeparam name="TValue">   The type of the property value. </typeparam>
@@ -567,18 +569,8 @@ namespace RabidWarren.Binding
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
         {
-            // NOTE:  If two un-gettable properties were to be bidirectionally bound to each other, it
-            //        would result in infinite recursion. 
-            if (getter == null)
-            {
-                return (propertyOwner, value) =>
-                {
-                    var owner = (INotifyingObject)propertyOwner;
-
-                    setter((TObject)propertyOwner, (TValue)value);
-                    owner.OnPropertyChangedEvent(name);
-                };
-            }
+            if (getter == null) throw new ArgumentNullException("getter");
+            if (setter == null) throw new ArgumentNullException("setter");
 
             if (typeof(TValue).IsValueType)
             {

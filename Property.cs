@@ -11,11 +11,10 @@ namespace RabidWarren.Binding
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
-    using RabidWarren.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
-
+    using Collections.Generic;
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>
@@ -542,10 +541,6 @@ namespace RabidWarren.Binding
 
             return info;
         }
-
-
-
-
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>

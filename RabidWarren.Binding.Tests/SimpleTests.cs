@@ -1,13 +1,14 @@
 ﻿namespace RabidWarren.Binding.Tests
 {
-    using NUnit.Framework;
-    using System.ComponentModel;
+	using NUnit.Framework;
+	using System;
+	using System.ComponentModel;
 
 
-    /// <summary>
-    /// Contains tests that do not pass a source object to the BindingObject constructor.
-    /// </summary>
-    public class SimpleTests : INotifyPropertyChanged
+	/// <summary>
+	/// Contains tests that do not pass a source object to the BindingObject constructor.
+	/// </summary>
+	public class SimpleTests : INotifyPropertyChanged
     {
         View _view;
         ViewModel _viewModel;
@@ -76,16 +77,7 @@
             Assert.False(IsReadable);
         }
 
-        // Test than an unreadable property can be set.
-        [Test]
-        public void CanSetUnreadableProperty()
-        {
-            _view.Bind(this, "Text", _viewModel, "UnreadableText");
-
-            Text = "Hiya";
-        }
-
-        // Test the CanWrite pseudo-property returning false.
+		// Test the CanWrite pseudo-property returning false.
         [Test]
         public void CannotWrite()
         {
@@ -93,5 +85,16 @@
 
             Assert.False(IsWritable);
         }
-    }
+		
+		/// <summary>
+		/// Binding to unreadable properties is not permitted.
+		/// </summary>
+		[Test]
+		[ExpectedException(typeof(ArgumentException),
+			ExpectedMessage = "A source property must be readable.\r\nParameter name: sourceProperty")]
+		public void CannotBindUnreadableProperty()
+		{
+			_view.Bind(this, "Text", _viewModel, "UnreadableText");
+		}
+	}
 }

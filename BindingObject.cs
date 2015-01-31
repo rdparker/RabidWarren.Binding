@@ -13,7 +13,7 @@ namespace RabidWarren.Binding
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
-    using RabidWarren.Collections.Generic;
+    using Collections.Generic;
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary> Represents an object that binds its properties to other objects. </summary>

@@ -278,7 +278,8 @@ namespace RabidWarren.Binding
         /// a getter, only call the setter when the value changes.
         /// </summary>
         ///
-        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
+        /// <exception cref="ArgumentNullException">    Thrown when <paramref name="getter"/> or
+        ///                                             <paramref name="setter"/> is <c>null</c>.</exception>
         ///
         /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
         /// <typeparam name="TValue">   The type of the property value. </typeparam>
@@ -294,6 +295,9 @@ namespace RabidWarren.Binding
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
         {
+            if (getter == null) throw new ArgumentNullException("getter");
+            if (setter == null) throw new ArgumentNullException("setter");
+
             // If TObject supports INotifyingObject, create a notifying setter.
             if (typeof(INotifyingObject).IsAssignableFrom(typeof(TObject)))
             {
@@ -303,26 +307,18 @@ namespace RabidWarren.Binding
                     (INotifyingObject o, TValue value) => setter((TObject)o, value));
             }
 
-            // Otherwise, if there is a getter, create a setter that guards against setting the property to the same
-            // value in case the underlying setter does not do so.
-            //
-            // NOTE:  If two un-gettable properties were to be bidirectionally bound to each other, it would result in
-            //        infinite recursion.
-            if (getter != null)
+            // Otherwise, create a setter that guards against setting the property to the same value in case the
+            // underlying setter does not do so.
+            return (propertyOwner, value) =>
             {
-                return (propertyOwner, value) =>
+                var owner = (TObject)propertyOwner;
+                if (value.Equals(getter(owner)))
                 {
-                    var owner = (TObject)propertyOwner;
-                    if (value.Equals(getter(owner)))
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    setter(owner, (TValue)value);
-                };
-            }
-
-            return (propertyOwner, value) => setter((TObject)propertyOwner, (TValue)value);
+                setter(owner, (TValue)value);
+            };
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////

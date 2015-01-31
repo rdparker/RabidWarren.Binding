@@ -72,31 +72,14 @@ namespace RabidWarren.Binding
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Registers the named property and its setter for binding. </summary>
+        /// <summary>
+        ///     Registers the named property and it accessors for binding.
+        /// </summary>
         ///
-        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
-        ///
-        /// <exception cref="ArgumentException">    Passed when the property has already been registered. </exception>
-        ///
-        /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
-        /// <typeparam name="TValue">   The type of the property. </typeparam>
-        /// <param name="name">     The name of the property. </param>
-        /// <param name="setter">   The function for setting the property on a given object. </param>
-        ///
-        /// <returns>   The property's metadata. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        public static PropertyMetadata Register<TObject, TValue>(string name, Action<TObject, TValue> setter)
-            where TObject : class
-        {
-            return Register(name, null, setter);
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Registers the named property and it accessors for binding. </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
-        ///
-        /// <exception cref="ArgumentException">    Thrown if the property was already registered. </exception>
+        /// <exception cref="ArgumentException">        Thrown if the property was already registered.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">    Thrown when <paramref name="getter"/> is
+        ///                                             <c>null</c>.</exception>
         ///
         /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
         /// <typeparam name="TValue">   The type of the property. </typeparam>
@@ -107,9 +90,11 @@ namespace RabidWarren.Binding
         /// <returns>   The property's metadata. </returns>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static PropertyMetadata Register<TObject, TValue>(
-            string name, Func<TObject, TValue> getter = null, Action<TObject, TValue> setter = null)
+            string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter = null)
             where TObject : class
         {
+            if (getter == null) throw new ArgumentNullException("getter");
+
             Type type = typeof(TObject);
             ICollection<PropertyMetadata> values;
 
@@ -124,8 +109,8 @@ namespace RabidWarren.Binding
             {
                 Type = typeof(TValue),
                 Name = name,
-                Get = getter == null ? (Func<object, object>)null : o => getter((TObject)o),
-                Set = setter == null ? (Action<object, object>)null : MakeSmartSetter(name, getter, setter)
+                Get = o => getter((TObject)o),
+                Set = setter == null ? null : MakeSmartSetter(name, getter, setter)
             };
 
             Registry.Add(type, metadata);

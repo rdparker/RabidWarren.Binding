@@ -332,7 +332,8 @@ namespace RabidWarren.Binding
         /// setter.</para>
         /// </summary>
         ///
-        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
+        /// <exception cref="ArgumentNullException">    Passes when <paramref name="getter"/> or
+        ///                                             <paramref name="setter"/> is <c>null</c>.</exception>
         ///
         /// <param name="ownerType">    Type of the owner. </param>
         /// <param name="name">         The name of the property. </param>
@@ -347,8 +348,6 @@ namespace RabidWarren.Binding
             Type ownerType, string name, Func<object, object> getter, Action<object, object> simpleSetter)
         {
             Action<object, object> smartSetter =
-                (simpleSetter == null)
-                    ? null :
                 typeof(INotifyingObject).IsAssignableFrom(ownerType)
                     ? MakeNotifyingSetter(name, getter, simpleSetter)
                     : MakeSmartSetter(name, getter, simpleSetter);
@@ -504,8 +503,9 @@ namespace RabidWarren.Binding
             if (setMethod != null)
                 simpleSetter = (o, value) => setMethod.Invoke(o, new[] { value });
 
-            Action<object, object> setter =
-                getter == null ? simpleSetter : MakeSmartSetter(ownerType, name, getter, simpleSetter);
+            Action<object, object> setter = 
+                getter == null ? simpleSetter :
+                simpleSetter == null ? null : MakeSmartSetter(ownerType, name, getter, simpleSetter);
 
             return new PropertyMetadata
             {

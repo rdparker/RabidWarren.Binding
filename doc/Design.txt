@@ -6,6 +6,11 @@ properties between components in a Portable Class Library (PCL) environment.
 The common use case is to bind View Model properties to View properties.
 
 Binding to an ungettable property is not permitted.  While some control systems
-have set-only values and while set-only properties can be created, they in
-effect are little more than commands or triggers, and therefore are treated as
+have set-only values and while set-only properties can be created, in effect
+they are little more than commands or triggers, and therefore are treated as
 invalid property binding targets.
+
+Originally, support for binding to nested properties was planned.  However,
+unless the nested property's direct parent implements INotifyPropertyChanged
+in cooperation with the parent, there is no way to trigger bound updates when
+the property is changed outside the binding mechanism.

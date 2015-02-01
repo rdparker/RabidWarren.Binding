@@ -86,6 +86,15 @@
             Assert.False(IsWritable);
         }
 		
+        [Test]
+        [ExpectedException(typeof(ArgumentException),
+            ExpectedMessage = "Cannot bind to an unregistered property.\r\nParameter name: sourceProperty")]
+        public void CannotBindToNestedProperty()
+        {
+            _viewModel.Outer.Inner = "Nested";
+            _view.Bind(this, "Text", _viewModel, "Outer.Inner");
+        }
+
 		/// <summary>
 		/// Binding to unreadable properties is not permitted.
 		/// </summary>

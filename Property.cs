@@ -139,35 +139,6 @@ namespace RabidWarren.Binding
                     if (elts[1] == "CanWrite")
                         return Register(type, name, Find(type, elts[0]).Set != null);
                 }
-
-                if (elts.Length >= 2)
-                {
-                    var outer = Find(type, elts[0]);
-                    var innerProperty = string.Join(".", elts.Skip(1));
-                    var outerGet = outer.Get;   // MainWindow -> TextBox
-                    var outerType = outer.Type;
-
-                    var inner = Find(outerType, innerProperty);
-                    var innerGet = inner.Get;
-                    var innerSet = inner.Set;
-                    var innerType = inner.Type;
-
-                    metadata = new PropertyMetadata
-                    {
-                        Type = innerType,
-                        Name = name,
-                        Get = o => innerGet(outerGet(o))
-                    };
-
-                    metadata.Set = MakeNotifyingSetter(
-                        name, 
-                        metadata.Get, 
-                        (o, value) => innerSet(outerGet(o), value));
-
-                    Registry.Add(type, metadata);
-
-                    return metadata;
-                }
             }
 
             // If it was found, cache the discovered information in the registry.

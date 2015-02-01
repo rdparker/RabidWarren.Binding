@@ -10,6 +10,7 @@ namespace RabidWarren.Binding.Tests
     {
         string _text;
         string _text2;
+        readonly OuterClass _outer = new OuterClass();
 
         public string Text
         {
@@ -49,6 +50,19 @@ namespace RabidWarren.Binding.Tests
             private get { return "Some Text"; }
 
             set { OnPropertyChangedEvent("UnreadableText"); }
+        }
+
+        public OuterClass Outer
+        {
+            get
+            {
+                return _outer;
+            }
+        }
+
+        public class OuterClass
+        {
+            public string Inner;
         }
     }
 }

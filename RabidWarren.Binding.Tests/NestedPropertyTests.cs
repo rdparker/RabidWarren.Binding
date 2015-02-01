@@ -23,9 +23,14 @@ namespace RabidWarren.Binding.Tests
 
         class Nested : INotifyingObject
         {
-            public Outer OuterProperty { get; set; }
+            public Outer OuterProperty { get; private set; }
 
             public event PropertyChangedEventHandler PropertyChanged;
+
+            public Nested()
+            {
+                OuterProperty = new Outer();
+            }
 
             public void OnPropertyChangedEvent(string propertyName)
             {

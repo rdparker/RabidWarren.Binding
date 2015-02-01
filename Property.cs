@@ -164,7 +164,7 @@ namespace RabidWarren.Binding
                         metadata.Get, 
                         (o, value) => innerSet(outerGet(o), value));
 
-                    Registry.Add(outerType, metadata);
+                    Registry.Add(type, metadata);
 
                     return metadata;
                 }

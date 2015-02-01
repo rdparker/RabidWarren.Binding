@@ -17,9 +17,9 @@ namespace RabidWarren.Binding
     class InvalidConversionException : Exception
     {
         /// <summary>
-        /// Instantiates an instance of this class with the given exception message.
+        /// Initializes a new instance of the <see cref="InvalidConversionException"/> class.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">The message that describes the error.</param>
         public InvalidConversionException(string message) : base(message)
         {
         }

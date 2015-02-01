@@ -15,8 +15,9 @@ namespace RabidWarren.Binding
     class Exception : System.Exception
     {
         /// <summary>
-        /// Instantiates an instance of this class with the given exception message.
+        /// Initializes a new instance of the <see cref="Exception"/> class.
         /// </summary>
+        /// <param name="message">The message that describes the error.</param>
         public Exception(string message) : base(message)
         {
         }

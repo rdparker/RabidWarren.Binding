@@ -193,7 +193,9 @@ namespace RabidWarren.Binding
         /// Updates the binding target property by converting the source value to the target's type.
         /// </summary>
         ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
+        /// <exception cref="InvalidConversionException"> Thrown when no <see cref="BindingConverter"/>
+        ///                                               is registered between the target and source types.
+        /// </exception>
         ///
         /// <param name="owner">        The target property owner. </param>
         /// <param name="targetInfo">   Information describing the target property. </param>
@@ -204,15 +206,18 @@ namespace RabidWarren.Binding
         {
             var converterType = ConverterRegistry.Find(sourceType, targetInfo.Type);
 
-            if (converterType != null)
-            {
-                var converter = (BindingConverter)Activator.CreateInstance(converterType);
-                var targetValue = converter.ConvertTo(value, targetInfo.Type, null);
+            if (converterType == null)
+                throw new InvalidConversionException(string.Format(
+                    "No converter exists between {0} and {1}.",
+                    sourceType,
+                    targetInfo.Type));
 
-                if (!ReferenceEquals(targetValue, BindingConverter.NoValue))
-                {
-                    targetInfo.Set(owner, targetValue);
-                }
+            var converter = (BindingConverter)Activator.CreateInstance(converterType);
+            var targetValue = converter.ConvertTo(value, targetInfo.Type, null);
+
+            if (!ReferenceEquals(targetValue, BindingConverter.NoValue))
+            {
+                targetInfo.Set(owner, targetValue);
             }
         }
 

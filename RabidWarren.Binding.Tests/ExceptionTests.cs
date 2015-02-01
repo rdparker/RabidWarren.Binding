@@ -83,7 +83,7 @@
         /// TODO:  Add a new exception type and use it in ConversionRegistry.Find.
         [Test]
         [ExpectedException(typeof(InvalidConversionException),
-            ExpectedMessage = "No converter exists between string and bool.")]
+            ExpectedMessage = "No converter exists between System.String and System.Boolean.")]
         public void NoConverter()
         {
             _view.Bind(_view, "Boolean", _viewModel, "Text");

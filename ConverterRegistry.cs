@@ -87,24 +87,19 @@ namespace RabidWarren.Binding
         /// <paramref name="targetType"/>.
         /// </summary>
         ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
-        ///
         /// <param name="sourceType">   Type of the source. </param>
         /// <param name="targetType">   Type of the target. </param>
         ///
-        /// <returns>   The type of the converter to be used. </returns>
+        /// <returns> The type of the converter to be used, if registered; otherwise, <c>false</c>.
+        /// </returns>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static Type Find(Type sourceType, Type targetType)
         {
-            Type converterType;
+            Type converterType = null;
 
-            if (Registry.TryGetValue(
-                            Tuple.Create(sourceType, targetType),
-                            out converterType))
-            {
-                return converterType;
-            }
-            else return null;
+            Registry.TryGetValue(Tuple.Create(sourceType, targetType), out converterType);
+
+            return converterType;
         }
     }
 }

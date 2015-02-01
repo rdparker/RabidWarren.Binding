@@ -14,5 +14,11 @@ namespace RabidWarren.Binding
     /// </summary>
     class Exception : System.Exception
     {
+        /// <summary>
+        /// Instantiates an instance of this class with the given exception message.
+        /// </summary>
+        public Exception(string message) : base(message)
+        {
+        }
     }
 }

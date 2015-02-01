@@ -39,72 +39,7 @@ namespace RabidWarren.Binding
             BindingFlags.Static   | BindingFlags.NonPublic,
             BindingFlags.Instance | BindingFlags.NonPublic
         };
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// Registers the named property and a getter that returns a constant value for binding.
-        /// </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 12/27/2014. </remarks>
-        ///
-        /// <typeparam name="TValue">   Type of the value. </typeparam>
-        /// <param name="type">     The type of the object containing the property. </param>
-        /// <param name="name">     The name of the property. </param>
-        /// <param name="value">    The value to be returned from the getter. </param>
-        ///
-        /// <returns>   The property metadata. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        public static PropertyMetadata Register<TValue>(Type type, string name, TValue value)
-        {
-            var metadata = new PropertyMetadata
-            {
-                Type = typeof(TValue),
-                Name = name,
-                Get = _ => value
-            };
-
-            Registry.Add(type, metadata);
-
-            return metadata;
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
-        ///     Registers the named property and it accessors for binding.
-        /// </summary>
-        ///
-        /// <exception cref="ArgumentException">        Thrown if the property was already registered.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">    Thrown when <paramref name="getter"/> is
-        ///                                             <c>null</c>.</exception>
-        ///
-        /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
-        /// <typeparam name="TValue">   The type of the property. </typeparam>
-        /// <param name="name">     The name of the property. </param>
-        /// <param name="getter">   The function for getting the named property from an object. </param>
-        /// <param name="setter">   The function for setting the named property on an object. </param>
-        ///
-        /// <returns>   The property's metadata. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        public static PropertyMetadata Register<TObject, TValue>(
-            string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter = null)
-            where TObject : class
-        {
-            if (getter == null) throw new ArgumentNullException("getter");
-
-            var metadata = new PropertyMetadata
-            {
-                Type = typeof(TValue),
-                Name = name,
-                Get = o => getter((TObject)o),
-                Set = setter == null ? null : MakeSmartSetter(name, getter, setter)
-            };
-
-            Registry.Add(typeof(TObject), metadata);
-
-            return metadata;
-        }
-
+        
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Finds the PropertyMetadata for the given type's named property.
@@ -204,6 +139,34 @@ namespace RabidWarren.Binding
 
             // No match was found.
             return null;
+        }
+        
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Registers the named property and a getter that returns a constant value for binding.
+        /// </summary>
+        ///
+        /// <remarks>   Last edited by Ron, 12/27/2014. </remarks>
+        ///
+        /// <typeparam name="TValue">   Type of the value. </typeparam>
+        /// <param name="type">     The type of the object containing the property. </param>
+        /// <param name="name">     The name of the property. </param>
+        /// <param name="value">    The value to be returned from the getter. </param>
+        ///
+        /// <returns>   The property metadata. </returns>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        internal static PropertyMetadata Register<TValue>(Type type, string name, TValue value)
+        {
+            var metadata = new PropertyMetadata
+            {
+                Type = typeof(TValue),
+                Name = name,
+                Get = _ => value
+            };
+
+            Registry.Add(type, metadata);
+
+            return metadata;
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////

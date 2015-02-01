@@ -76,6 +76,15 @@
             _view.Bind(_view, "Text", _viewModel, "Text");
         }
 
+        [Test]
+        [ExpectedException(typeof(ArgumentException),
+            ExpectedMessage = "A property can only be registered once.")]
+        public void CannotRegisterPropertyTwice()
+        {
+            Property.Register(GetType(), "Constant", 3.14);
+            Property.Register(GetType(), "Constant", 2.78);
+        }
+
         /// <summary>
         /// Make sure that binding fails when there is no appropriate converter.
         /// </summary>

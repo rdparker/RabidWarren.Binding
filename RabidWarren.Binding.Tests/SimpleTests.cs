@@ -96,5 +96,22 @@
 		{
 			_view.Bind(this, "Text", _viewModel, "UnreadableText");
 		}
-	}
+
+        /// <summary>
+        /// This tests binding multiple properties within the same objects.  This also helps with code
+        /// coverage in <see cref="M:BindingObject::Bind{TTarget,TSource}"/>.
+        /// </summary>
+        [Test]
+        public void BindMultipleProperties()
+        {
+            _view.Bind(_view, "Text", _viewModel, "Text");
+            _view.Bind(_view, "Text2", _viewModel, "Text2");
+
+            _viewModel.Text = "Text";
+            _viewModel.Text2 = "Text2";
+
+            Assert.AreEqual(_view.Text, "Text");
+            Assert.AreEqual(_view.Text2, "Text2");
+        }
+    }
 }

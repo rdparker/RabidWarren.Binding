@@ -9,6 +9,7 @@ namespace RabidWarren.Binding.Tests
     class ViewModel : NotifyingObject
     {
         string _text;
+        string _text2;
 
         public string Text
         {
@@ -21,6 +22,20 @@ namespace RabidWarren.Binding.Tests
             {
                 _text = value;
                 OnPropertyChangedEvent("Text");
+            }
+        }
+
+        public string Text2
+        {
+            get
+            {
+                return _text2;
+            }
+
+            set
+            {
+                _text2 = value;
+                OnPropertyChangedEvent("Text2");
             }
         }
 

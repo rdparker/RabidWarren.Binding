@@ -26,9 +26,6 @@ namespace RabidWarren.Binding
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
     public static class Property
     {
-        /// <summary>   Maps class names to lists of properties. </summary>
-        static readonly Multimap<Type, PropertyMetadata> Registry = new Multimap<Type, PropertyMetadata>();
-
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Specifies the order of precedence when searching for properties via reflection.  NonPublic
@@ -95,16 +92,6 @@ namespace RabidWarren.Binding
         {
             if (getter == null) throw new ArgumentNullException("getter");
 
-            Type type = typeof(TObject);
-            ICollection<PropertyMetadata> values;
-
-            if (Registry.TryGetValues(type, out values) &&
-                values.FirstOrDefault(x => x.Name == name) != null)
-            {
-                var message = string.Format("The {1} for {0} has already been registered.", name, type.FullName);
-                throw new ArgumentException(message);
-            }
-
             var metadata = new PropertyMetadata
             {
                 Type = typeof(TValue),
@@ -113,7 +100,7 @@ namespace RabidWarren.Binding
                 Set = setter == null ? null : MakeSmartSetter(name, getter, setter)
             };
 
-            Registry.Add(type, metadata);
+            Registry.Add(typeof(TObject), metadata);
 
             return metadata;
         }
@@ -132,17 +119,10 @@ namespace RabidWarren.Binding
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static PropertyMetadata Find(Type type, string name)
         {
-            PropertyMetadata metadata;
-            ICollection<PropertyMetadata> values;
-
             // Try to lookup the property in the registry.
-            if (Registry.TryGetValues(type, out values))
-            {
-                metadata = values.FirstOrDefault(x => x.Name == name);
-
-                if (metadata != null)
-                    return metadata;
-            }
+            var metadata = Registry.Find(type, name);
+            if (metadata != null)
+                return metadata;
 
             // If it wasn't found in he registry, try locating it via reflection.
             metadata = FromPropertyInfo(type, name) ?? FromMethods(type, name) ?? FromField(type, name);
@@ -591,6 +571,63 @@ namespace RabidWarren.Binding
                 setter(owner, (TValue)value);
                 ((INotifyingObject)propertyOwner).OnPropertyChangedEvent(name);
             };
+        }
+
+        /// <summary>
+        /// Controls access to the property registry, enforcing singular registration of a property.
+        /// </summary>
+        public static class Registry
+        {
+            /// <summary>   Maps class names to lists of properties. </summary>
+            static readonly Multimap<Type, PropertyMetadata> Entries = new Multimap<Type, PropertyMetadata>();
+
+            /// <summary>
+            /// Adds a property entry using the given type and property metadata.
+            /// </summary>
+            /// <exception cref="ArgumentException">Thrown when the given property has already been
+            /// registered.</exception>
+            /// <param name="type">The type of the object containing the property.</param>
+            /// <param name="metadata">The metadata that defines the property.</param>
+            internal static void Add(Type type, PropertyMetadata metadata)
+            {
+                var name = metadata.Name;
+
+                if (Contains(type, name))
+                {
+                    var message = string.Format(
+                        "The {1}.{0} property has already been registered.",
+                        name,
+                        type.FullName);
+
+                    throw new ArgumentException(message);
+                }
+
+                Entries.Add(type, metadata);
+            }
+
+            /// <summary>
+            /// Finds the given registered property, if any.
+            /// </summary>
+            /// <param name="type">The type containing the property.</param>
+            /// <param name="name">The name of the property.</param>
+            /// <returns>The metadata describing the property.</returns>
+            internal static PropertyMetadata Find(Type type, string name)
+            {
+                ICollection<PropertyMetadata> values;
+
+                return Entries.TryGetValues(type, out values) ? values.FirstOrDefault(x => x.Name == name) : null;
+            }
+
+            /// <summary>
+            /// Checks if the given property exists in the registry.
+            /// </summary>
+            /// <param name="type">The type containing the property.</param>
+            /// <param name="name">The name of the property.</param>
+            /// <returns><c>true</c> if the property has been registered; otherwise <c>false.</c>.</returns>
+            internal static bool Contains(Type type, string name)
+            {
+                return Find(type, name) != null;
+            }
         }
     }
 }

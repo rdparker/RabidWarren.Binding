@@ -78,7 +78,8 @@
 
         [Test]
         [ExpectedException(typeof(ArgumentException),
-            ExpectedMessage = "A property can only be registered once.")]
+            ExpectedMessage =
+            "The RabidWarren.Binding.Tests.ExceptionTests.Constant property has already been registered.")]
         public void CannotRegisterPropertyTwice()
         {
             Property.Register(GetType(), "Constant", 3.14);

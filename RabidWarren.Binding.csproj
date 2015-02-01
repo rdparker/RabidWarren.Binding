@@ -25,6 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -39,6 +40,8 @@
     <Compile Include="BindingConverter.cs" />
     <Compile Include="BindingObject.cs" />
     <Compile Include="ConverterRegistry.cs" />
+    <Compile Include="Exception\Exception.cs" />
+    <Compile Include="Exception\InvalidConversionException.cs" />
     <Compile Include="IBindingConverter.cs" />
     <Compile Include="IntegerConverter.cs" />
     <Compile Include="INotifyingObject.cs" />

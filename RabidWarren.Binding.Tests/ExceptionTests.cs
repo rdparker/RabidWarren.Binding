@@ -8,6 +8,7 @@
         class PropertiedClass : BindingObject
         {
             string _text;
+            bool _boolean;
 
             public string Text
             {
@@ -20,6 +21,20 @@
                 {
                     _text = value;
                     OnPropertyChangedEvent("Text");
+                }
+            }
+
+            public bool Boolean
+            {
+                get
+                {
+                    return _boolean;
+                }
+
+                set
+                {
+                    _boolean = value;
+                    OnPropertyChangedEvent("Boolean");
                 }
             }
         }
@@ -59,6 +74,20 @@
 
             _view.Bind(_view, "Text", _viewModel, "Text");
             _view.Bind(_view, "Text", _viewModel, "Text");
+        }
+
+        /// <summary>
+        /// Make sure that binding fails when there is no appropriate converter.
+        /// </summary>
+        /// TODO:  Add solution and file system Exceptions directories to RabidWarren.Binding.
+        /// TODO:  Add a new exception type and use it in ConversionRegistry.Find.
+        [Test]
+        [ExpectedException(typeof(InvalidConversionException),
+            ExpectedMessage = "No converter exists between string and bool.")]
+        public void NoConverter()
+        {
+            _view.Bind(_view, "Boolean", _viewModel, "Text");
+            _viewModel.Text = "True";
         }
     }
 }

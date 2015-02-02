@@ -118,7 +118,7 @@ namespace RabidWarren.Binding
             foreach (var visibility in VisibilityPrecedence)
             {
                 // Prefer properties first.
-                PropertyInfo info = GetPropertyInfo(type, name, visibility);
+                PropertyInfo info = type.GetProperty(name, visibility);
                 if (info != null)
                 {
                     var getter = info.GetGetMethod(visibility.HasFlag(BindingFlags.NonPublic));
@@ -270,7 +270,7 @@ namespace RabidWarren.Binding
         {
             foreach (var visibility in VisibilityPrecedence)
             {
-                PropertyInfo info = GetPropertyInfo(type, name, visibility);
+                PropertyInfo info = type.GetProperty(name, visibility);
                 if (info != null)
                     return info.ToMetadata();
             }
@@ -413,33 +413,6 @@ namespace RabidWarren.Binding
                 Get = getter,
                 Set = setter
             };
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Gets PropertyInformation using reflection. </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
-        ///
-        /// <param name="type">         The type of the object containing the property. </param>
-        /// <param name="name">         The name of the property. </param>
-        /// <param name="visibility">   The visibility. </param>
-        ///
-        /// <returns>   The property information. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        static PropertyInfo GetPropertyInfo(Type type, string name, BindingFlags visibility)
-        {
-            PropertyInfo info;
-            try
-            {
-                info = type.GetProperty(name, visibility);
-            }
-            catch (AmbiguousMatchException)
-            {
-                // Try disambiguating properties that are overridden using the "new" keyword.
-                info = type.GetProperty(name, visibility | BindingFlags.DeclaredOnly);
-            }
-
-            return info;
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////

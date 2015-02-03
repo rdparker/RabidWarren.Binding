@@ -181,9 +181,6 @@ namespace RabidWarren.Binding
         /// setter.</para>
         /// </summary>
         ///
-        /// <exception cref="ArgumentNullException">    Passes when <paramref name="getter"/> or
-        ///                                             <paramref name="setter"/> is <c>null</c>.</exception>
-        ///
         /// <param name="ownerType">    Type of the owner. </param>
         /// <param name="name">         The name of the property. </param>
         /// <param name="getter">       The function for getting the property's value from the object
@@ -198,9 +195,6 @@ namespace RabidWarren.Binding
         {
             if (typeof(INotifyingObject).IsAssignableFrom(ownerType))
                 return MakeNotifyingSetter(name, getter, setter);
-
-            if (getter == null) throw new ArgumentNullException("getter");
-            if (setter == null) throw new ArgumentNullException("setter");
 
             // Otherwise, create a setter that guards against setting the property to the same value in case the
             // underlying setter does not do so.
@@ -383,9 +377,6 @@ namespace RabidWarren.Binding
         /// interface.
         /// </summary>
         ///
-        /// <exception cref="ArgumentNullException">    Thrown when <paramref name="getter"/> or
-        ///                                             <paramref name="setter"/> is <c>null</c>.</exception>
-        ///
         /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
         /// <typeparam name="TValue">   The type of the property value. </typeparam>
         /// <param name="name">     The name of the property. </param>
@@ -403,9 +394,6 @@ namespace RabidWarren.Binding
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
         {
-            if (getter == null) throw new ArgumentNullException("getter");
-            if (setter == null) throw new ArgumentNullException("setter");
-
             return (propertyOwner, value) =>
             {
                 var owner = (TObject)propertyOwner;

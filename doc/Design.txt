@@ -14,3 +14,8 @@ Originally, support for binding to nested properties was planned.  However,
 unless the nested property's direct parent implements INotifyPropertyChanged
 in cooperation with the parent, there is no way to trigger bound updates when
 the property is changed outside the binding mechanism.
+
+Originally there was a ParameterType property for BindingConverterAttributes.
+But, they were removed because they were not usable in the form in which they
+existed form and there was no immediate need for them.  They may return in the
+future.

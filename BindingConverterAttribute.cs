@@ -40,11 +40,5 @@ namespace RabidWarren.Binding
         /// </summary>
         /// <value>The type of the target property.</value>
         public Type TargetType { get; private set; }
-
-        /// <summary>
-        /// Gets the type of the optional parameter.
-        /// </summary>
-        /// <value>The type of the parameter.</value>
-        public Type ParameterType { get; private set; }
     }
 }

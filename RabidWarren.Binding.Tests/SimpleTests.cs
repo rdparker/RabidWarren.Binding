@@ -134,5 +134,17 @@
             _view.Number = 278;
             Assert.AreEqual(278, _viewModel.Number);
         }
+
+        /// <summary>
+        /// Test that properties of a nested INotifyPropertyChanged object may be bound to.
+        /// </summary>
+        [Test]
+        public void NestedNotifiable()
+        {
+            _view.Bind(_view, "Text", _viewModel, "Nested.Text");
+
+            _viewModel.Nested.Text = "Nested";
+            Assert.AreEqual("Nested", _view.Text);
+        }
     }
 }

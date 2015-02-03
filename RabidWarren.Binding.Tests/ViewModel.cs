@@ -11,6 +11,7 @@ namespace RabidWarren.Binding.Tests
         int _number;
         string _text;
         string _text2;
+        readonly NestedNotifiable _nested = new NestedNotifiable();
         readonly OuterClass _outer = new OuterClass();
 
         public string Text
@@ -72,6 +73,14 @@ namespace RabidWarren.Binding.Tests
             {
                 _number = value;
                 OnPropertyChangedEvent("Number");
+            }
+        }
+
+        public NestedNotifiable Nested
+        {
+            get
+            {
+                return _nested;
             }
         }
 

@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExceptionTests.cs" />
+    <Compile Include="NestedNotifiable.cs" />
     <Compile Include="PropertyFieldTests.cs" />
     <Compile Include="PropertyMethodTests.cs" />
     <Compile Include="BindingConverterTests.cs" />

@@ -113,8 +113,8 @@
         [Test]
         public void BindMultipleProperties()
         {
-            _view.Bind(_view, "Text", _viewModel, "Text");
-            _view.Bind(_view, "Text2", _viewModel, "Text2");
+            _view.Bind("Text", _viewModel, "Text");
+            _view.Bind("Text2", _viewModel, "Text2");
 
             _viewModel.Text = "Text";
             _viewModel.Text2 = "Text2";

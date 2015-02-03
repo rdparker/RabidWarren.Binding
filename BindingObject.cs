@@ -96,6 +96,36 @@ namespace RabidWarren.Binding
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
+        /// Binds the specified target property of this instance to the specified source property using the
+        /// source object that was passed to <see cref="M:BindingObject(NotifyingObject)"/>.
+        /// </summary>
+        ///
+        /// <param name="target">   The target property. </param>
+        /// <param name="source">   The source property. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        public void Bind(string target, string source)
+        {
+            Bind(this, target, _sourceObject, source);
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Binds the specified target property to the specified source's source property.
+        /// </summary>
+        ///
+        /// <typeparam name="TSource">      The type of the source. </typeparam>
+        /// <param name="property">         The target property. </param>
+        /// <param name="source">           The target object. </param>
+        /// <param name="sourceProperty">   The source property. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        public void Bind<TSource>(string property, TSource source, string sourceProperty)
+            where TSource : INotifyPropertyChanged
+        {
+            Bind(this, property, source, sourceProperty);
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
         /// Binds the specified target property to the specified source property using the source object
         /// that was passed to <see cref="M:BindingObject(NotifyingObject)"/>.
         /// </summary>

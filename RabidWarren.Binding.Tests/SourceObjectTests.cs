@@ -26,7 +26,7 @@
         public void BindReturns3Arg()
         {
             _viewModel.Text = "Some Text";
-            _view.Bind(_view, "Text", "Text");
+            _view.Bind("Text", "Text");
 
             Assert.True(true);
         }

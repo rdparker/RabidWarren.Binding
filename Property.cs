@@ -406,22 +406,6 @@ namespace RabidWarren.Binding
             if (getter == null) throw new ArgumentNullException("getter");
             if (setter == null) throw new ArgumentNullException("setter");
 
-            if (typeof(TValue).IsValueType)
-            {
-                return (propertyOwner, value) =>
-                {
-                    var owner = (TObject)propertyOwner;
-
-                    if (value.Equals(getter(owner)))
-                    {
-                        return;
-                    }
-
-                    setter(owner, (TValue)value);
-                    ((INotifyingObject)propertyOwner).OnPropertyChangedEvent(name);
-                };
-            }
-
             return (propertyOwner, value) =>
             {
                 var owner = (TObject)propertyOwner;

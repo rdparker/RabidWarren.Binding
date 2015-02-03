@@ -171,56 +171,6 @@ namespace RabidWarren.Binding
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// If the object supports the <see cref="Binding.INotifyingObject"/> interface, wrap the passed
-        /// setter with logic for firing the PropertyChanged notification; otherwise, if the property has
-        /// a getter, only call the setter when the value changes.
-        /// </summary>
-        ///
-        /// <exception cref="ArgumentNullException">    Thrown when <paramref name="getter"/> or
-        ///                                             <paramref name="setter"/> is <c>null</c>.</exception>
-        ///
-        /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
-        /// <typeparam name="TValue">   The type of the property value. </typeparam>
-        /// <param name="name">     The name of the property. </param>
-        /// <param name="getter">   The the function for getting the property's value from the object
-        ///                         that contains it. </param>
-        /// <param name="setter">   The the function for setting the property's value in the given
-        ///                         object. </param>
-        ///
-        /// <returns>   The wrapped setter. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        static Action<object, object> MakeSmartSetter<TObject, TValue>(
-            string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
-            where TObject : class
-        {
-            if (getter == null) throw new ArgumentNullException("getter");
-            if (setter == null) throw new ArgumentNullException("setter");
-
-            // If TObject supports INotifyingObject, create a notifying setter.
-            if (typeof(INotifyingObject).IsAssignableFrom(typeof(TObject)))
-            {
-                return MakeNotifyingSetter(
-                    name,
-                    (INotifyingObject o) => getter((TObject)o),
-                    (INotifyingObject o, TValue value) => setter((TObject)o, value));
-            }
-
-            // Otherwise, create a setter that guards against setting the property to the same value in case the
-            // underlying setter does not do so.
-            return (propertyOwner, value) =>
-            {
-                var owner = (TObject)propertyOwner;
-                if (value.Equals(getter(owner)))
-                {
-                    return;
-                }
-
-                setter(owner, (TValue)value);
-            };
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
         /// If the <paramref name="ownerType"/> supports the <see cref="INotifyingObject"/> interface,
         /// wrap the passed setter with logic for firing the PropertyChanged notification; otherwise, if
         /// the property has a getter, only call the setter when the value really changes.
@@ -238,20 +188,32 @@ namespace RabidWarren.Binding
         /// <param name="name">         The name of the property. </param>
         /// <param name="getter">       The function for getting the property's value from the object
         ///                             that contains it. </param>
-        /// <param name="simpleSetter"> The unadorned function for setting the property's value on a
+        /// <param name="setter">       The unadorned function for setting the property's value on a
         ///                             given object. </param>
         ///
         /// <returns>   The wrapped setter. </returns>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         static Action<object, object> MakeSmartSetter(
-            Type ownerType, string name, Func<object, object> getter, Action<object, object> simpleSetter)
+            Type ownerType, string name, Func<object, object> getter, Action<object, object> setter)
         {
-            Action<object, object> smartSetter =
-                typeof(INotifyingObject).IsAssignableFrom(ownerType)
-                    ? MakeNotifyingSetter(name, getter, simpleSetter)
-                    : MakeSmartSetter(name, getter, simpleSetter);
+            if (typeof(INotifyingObject).IsAssignableFrom(ownerType))
+                return MakeNotifyingSetter(name, getter, setter);
 
-            return smartSetter;
+            if (getter == null) throw new ArgumentNullException("getter");
+            if (setter == null) throw new ArgumentNullException("setter");
+
+            // Otherwise, create a setter that guards against setting the property to the same value in case the
+            // underlying setter does not do so.
+            return (propertyOwner, value) =>
+            {
+                var owner = propertyOwner;
+                if (value.Equals(getter(owner)))
+                {
+                    return;
+                }
+
+                setter(owner, value);
+            };
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////

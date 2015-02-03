@@ -119,10 +119,28 @@
             _viewModel.Text = "Text";
             _viewModel.Text2 = "Text2";
 
+            // TODO:  Fix the order of all Assert arguments.
             Assert.AreEqual(_view.Text, "Text");
             Assert.AreEqual(_view.Text2, "Text2");
         }
-        
+
+        /// <summary>
+        /// This provides code coverage for the integer converter case, where the target value becomes
+        /// unconvertable to the source property type, such as clearing a text field bound to a numeric
+        /// property.
+        /// </summary>
+        [Test]
+        public void UnconvertableTargetProperty()
+        {
+            _view.Bind(_view, "Text", _viewModel, "Number");
+
+            _viewModel.Number = 314;
+            Assert.AreEqual("314", _view.Text);
+
+            _view.Text = string.Empty;
+            Assert.AreEqual(314, _viewModel.Number);
+        }
+
         [Test]
         public void BindValueTypeProperties()
         {

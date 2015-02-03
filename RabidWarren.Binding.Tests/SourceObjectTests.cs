@@ -41,5 +41,15 @@
 
             Assert.True(true);
         }
+
+        /// <summary>
+        /// Tests that a three argument Bind call returns without exception, when the target property is initialized.
+        /// </summary>
+        [Test]
+        public void BindReturns3ArgInitialized()
+        {
+            _view.Text = "Original Value";
+            _view.Bind(_view, "Text", "Text");
+        }
     }
 }

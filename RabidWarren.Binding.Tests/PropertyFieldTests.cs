@@ -9,23 +9,40 @@
     /// </summary>
     class PropertyFieldTests
     {
+        PropertiedClass _view;
+        PropertiedClass _viewModel;
+
         class PropertiedClass : BindingObject
         {
             public string Text;
+            public bool IsWritable;
+        }
+
+        [SetUp]
+        public void Setup()
+        {
+            _view = new PropertiedClass();
+            _viewModel = new PropertiedClass();
         }
 
         [Test]
         public void PropertyFields()
         {
             var exampleText = "Some Text";
+            
+            _viewModel.Text = exampleText;
+            _view.Bind(_view, "Text", _viewModel, "Text");
 
-            var view = new PropertiedClass();
-            var viewModel = new PropertiedClass();
+            Assert.AreEqual(exampleText, _view.Text);
+        }
 
-            viewModel.Text = exampleText;
-            view.Bind(view, "Text", viewModel, "Text");
+        // Test the CanWrite pseudo-property.
+        [Test]
+        public void FieldCanWriteProperty()
+        {
+            _view.Bind(_view, "IsWritable", _viewModel, "Text.CanWrite");
 
-            Assert.AreEqual(exampleText, view.Text);
+            Assert.True(_view.IsWritable);
         }
     }
 }

@@ -8,6 +8,7 @@ namespace RabidWarren.Binding.Tests
 {
     class ViewModel : NotifyingObject
     {
+        int _number;
         string _text;
         string _text2;
         readonly OuterClass _outer = new OuterClass();
@@ -57,6 +58,20 @@ namespace RabidWarren.Binding.Tests
             get
             {
                 return _outer;
+            }
+        }
+
+        public int Number
+        {
+            get
+            {
+                return _number;
+            }
+
+            set
+            {
+                _number = value;
+                OnPropertyChangedEvent("Number");
             }
         }
 

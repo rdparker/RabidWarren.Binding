@@ -122,5 +122,17 @@
             Assert.AreEqual(_view.Text, "Text");
             Assert.AreEqual(_view.Text2, "Text2");
         }
+        
+        [Test]
+        public void BindValueTypeProperties()
+        {
+            _view.Bind(_view, "Number", _viewModel, "Number");
+
+            _viewModel.Number = 314;
+            Assert.AreEqual(314, _view.Number);
+
+            _view.Number = 278;
+            Assert.AreEqual(278, _viewModel.Number);
+        }
     }
 }

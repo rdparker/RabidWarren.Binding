@@ -86,6 +86,14 @@
             Property.Register(GetType(), "Constant", 2.78);
         }
 
+        [Test]
+        [ExpectedException(typeof(ArgumentException),
+            ExpectedMessage = "Nonexistent property\r\nParameter name: name")]
+        public void NonexistentObjectSubproperty()
+        {
+            _view.Bind(_view, "IsWritable", _viewModel, "Bogus.Subproperty");
+        }
+
         /// <summary>
         /// Make sure that binding fails when there is no appropriate converter.
         /// </summary>

@@ -68,12 +68,6 @@
             Assert.True(IsWritable);
         }
 
-        [Test]
-        public void NonexistentObjectSubproperty()
-        {
-            _view.Bind(this, "IsWritable", _viewModel, "Bogus.Subproperty");
-        }
-
         // Test the CanRead pseudo-property returning false.
         [Test]
         public void CannotRead()

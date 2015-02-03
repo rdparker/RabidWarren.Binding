@@ -86,7 +86,7 @@ namespace RabidWarren.Binding
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Gets the value of a property using reflection. </summary>
         ///
-        /// <remarks>   Last edited by Ron, 12/27/2014. </remarks>
+        /// <exception cref="ArgumentException">   Thrown when name does not specify a property.</exception>
         ///
         /// <param name="obj">  The object the property belongs to. </param>
         /// <param name="name"> The property's name. </param>
@@ -96,7 +96,10 @@ namespace RabidWarren.Binding
         public static object GetReflected(object obj, string name)
         {
             var get = GetReflectedGetMethod(obj.GetType(), name);
-                
+
+            if (get == null)
+                throw new ArgumentException("Nonexistent property", "name");
+
             return get(obj);
         }
 

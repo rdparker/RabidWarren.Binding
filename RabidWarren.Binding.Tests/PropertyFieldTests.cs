@@ -15,7 +15,12 @@
         class PropertiedClass : BindingObject
         {
             public string Text;
+
+            // Field '....IsWritable' is never assigned to, and will always have its default value 'null'
+            // IsWritable is accessed by textual name in FieldCanWriteProperty below.
+#pragma warning disable 0649
             public bool IsWritable;
+#pragma warning restore 0649
         }
 
         [SetUp]

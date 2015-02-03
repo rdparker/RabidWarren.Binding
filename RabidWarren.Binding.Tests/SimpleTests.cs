@@ -13,7 +13,11 @@
         View _view;
         ViewModel _viewModel;
 
+        // The event 'SimpleTests.PropertyChanged' is never used
+        // Actually it is used by Bind, when CanRead binds to IsReadable.
+#pragma warning disable 0067
         public event PropertyChangedEventHandler PropertyChanged;
+#pragma warning restore 0067
 
         public bool IsReadable { get; set; }
         public bool IsWritable { get; set; }

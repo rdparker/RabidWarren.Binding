@@ -31,8 +31,8 @@ namespace RabidWarren.Binding
         /// Bindings that this object has established to other object's properties.
         /// </summary>
         /// <remarks>
-        /// The keys and values have the same type, <see cref="Tuple{INotifyPropertyChanged, string}"/>.  This contains
-        /// two elements, the object that contains the property and the path from the object to the property.
+        /// The keys and values have the same type, <see cref="T:Tuple{INotifyPropertyChanged, string}"/>.  This
+        /// contains two elements, the object that contains the property and the path from the object to the property.
         /// <para>
         /// A property path may be the name of a property which is directly owned by the object or a dotted path to a
         /// property.  For example, if an object has a Text property its path would be "Text", but if it has a TextBox
@@ -42,12 +42,12 @@ namespace RabidWarren.Binding
             _bindings = new Multimap<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>();
 
         /// <summary>
-        /// Tracks the source objects whose <see cref="PropertyChanged"/> event has been subscribed to.
+        /// Tracks the source objects whose <see cref="E:PropertyChanged"/> event has been subscribed to.
         /// </summary>
         readonly List<INotifyPropertyChanged> _sourceObjects = new List<INotifyPropertyChanged>();
 
         /// <summary>
-        /// Tracks the target objects whose <see cref="PropertyChanged"/> event has been subscribed to.
+        /// Tracks the target objects whose <see cref="E:PropertyChanged"/> event has been subscribed to.
         /// <para>
         /// Normally this will just be the <see cref="BindingObject"/>, but if <see cref="Bind"/> is passed a property
         /// path which passes through another object that supports <see cref="INotifyPropertyChanged"/> the binding
@@ -77,7 +77,7 @@ namespace RabidWarren.Binding
 
         /// <summary>
         /// Finalizes an instance of the <see cref="BindingObject"/> class, unregistering it from all
-        /// <see cref="PropertyChanged"/> events.
+        /// <see cref="E:PropertyChanged"/> events.
         /// </summary>
         ~BindingObject()
         {
@@ -281,7 +281,7 @@ namespace RabidWarren.Binding
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Handles <see cref="PropertyChanged"/> events from bound sources. </summary>
+        /// <summary>   Handles <see cref="E:PropertyChanged"/> events from bound sources. </summary>
         ///
         /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
         ///
@@ -294,7 +294,7 @@ namespace RabidWarren.Binding
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Handles <see cref="PropertyChanged"/> events from bound targets. </summary>
+        /// <summary>   Handles <see cref="E:PropertyChanged"/> events from bound targets. </summary>
         ///
         /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
         ///

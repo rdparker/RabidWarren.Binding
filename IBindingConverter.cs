@@ -13,8 +13,8 @@ namespace RabidWarren.Binding
 
     /// <summary>
     /// Declares the interface binding converter classes must implement.  They must also have the
-    /// <see cref="Binding.BindingConverterAttribute"/>.  If they do not
-    /// <see cref="Binding.ConverterRegistry.RegisterAll()"/> will not find them.
+    /// <see cref="BindingConverterAttribute"/>.  If they do not
+    /// <see cref="M:ConverterRegistry.RegisterAll()"/> will not find them.
     /// </summary>
     /// <remarks>Instead of directly inheriting this interface, classes should be derived from
     /// <see cref="Binding.BindingConverter"/>.  It provides <see cref="Binding.BindingConverter.NoValue"/>, which is

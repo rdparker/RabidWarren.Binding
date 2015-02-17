@@ -56,23 +56,20 @@ namespace RabidWarren.Binding
         /// </summary>
         readonly List<INotifyPropertyChanged> _targetObjects = new List<INotifyPropertyChanged>();
 
-        /// <summary> The optional source object used by the short form of <see cref="Bind"/>. </summary>
-        NotifyingObject _sourceObject;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
+        /// Initializes a new instance of the <see cref="BindingObject"/> class.
         /// </summary>
         public BindingObject()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Binding.BindingObject"/> class.
+        /// Initializes a new instance of the <see cref="BindingObject"/> class.
         /// </summary>
         /// <param name="sourceObject">The object which acts as a source for bound properties.</param>
         public BindingObject(NotifyingObject sourceObject)
         {
-            _sourceObject = sourceObject;
+            SourceObject = sourceObject;
         }
 
         /// <summary>
@@ -94,6 +91,11 @@ namespace RabidWarren.Binding
             }
         }
 
+        /// <summary>
+        /// Gets the source object which is used by <see cref="M:Bind"/> calls which are not passed one.
+        /// </summary>
+        public NotifyingObject SourceObject { get; private set; }
+
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Binds the specified target property of this instance to the specified source property using the
@@ -105,7 +107,7 @@ namespace RabidWarren.Binding
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public void Bind(string target, string source)
         {
-            Bind(this, target, _sourceObject, source);
+            Bind(this, target, SourceObject, source);
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +142,7 @@ namespace RabidWarren.Binding
         public void Bind<TTarget>(TTarget target, string property, string source)
             where TTarget : INotifyPropertyChanged
         {
-            Bind(target, property, _sourceObject, source);
+            Bind(target, property, SourceObject, source);
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////

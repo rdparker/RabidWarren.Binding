@@ -84,26 +84,6 @@ namespace RabidWarren.Binding
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Gets the value of a property using reflection. </summary>
-        ///
-        /// <exception cref="ArgumentException">   Thrown when name does not specify a property.</exception>
-        ///
-        /// <param name="obj">  The object the property belongs to. </param>
-        /// <param name="name"> The property's name. </param>
-        ///
-        /// <returns>   The property's value. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        public static object GetReflected(object obj, string name)
-        {
-            var get = GetReflectedGetMethod(obj.GetType(), name);
-
-            if (get == null)
-                throw new ArgumentException("Nonexistent property", "name");
-
-            return get(obj);
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Gets a property's get method using reflection. </summary>
         ///
         /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
@@ -143,7 +123,27 @@ namespace RabidWarren.Binding
             // No match was found.
             return null;
         }
-        
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets the value of a property using reflection. </summary>
+        ///
+        /// <exception cref="ArgumentException">   Thrown when name does not specify a property.</exception>
+        ///
+        /// <param name="obj">  The object the property belongs to. </param>
+        /// <param name="name"> The property's name. </param>
+        ///
+        /// <returns>   The property's value. </returns>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        internal static object GetReflected(object obj, string name)
+        {
+            var get = GetReflectedGetMethod(obj.GetType(), name);
+
+            if (get == null)
+                throw new ArgumentException("Nonexistent property", "name");
+
+            return get(obj);
+        }
+
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Registers the named property and a getter that returns a constant value for binding.

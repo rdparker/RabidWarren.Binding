@@ -10,6 +10,7 @@ namespace RabidWarren.Binding.Tests
     {
         int _number;
         string _text;
+        readonly OuterClass _outer = new OuterClass();
 
         public View()
         {
@@ -49,5 +50,18 @@ namespace RabidWarren.Binding.Tests
         }
 
         public string Text2 { get; set; }
+
+        public OuterClass Outer
+        {
+            get
+            {
+                return _outer;
+            }
+        }
+
+        public class OuterClass
+        {
+            public string Inner;
+        }
     }
 }

@@ -91,18 +91,25 @@
         }
 		
         [Test]
-        [ExpectedException(typeof(ArgumentException),
-            ExpectedMessage = "Cannot bind to an unregistered property.\r\nParameter name: sourceProperty")]
-        public void CannotBindToNestedProperty()
+        public void BindToNestedProperty()
         {
-            _viewModel.Outer.Inner = "Nested";
+            _viewModel.Text = "Nested";
+            _view.Bind("Outer.Inner", _viewModel, "Text");
+        }
+
+        /// <summary>
+        /// Improve code coverage by testing binding a null property to a null nested property.
+        /// </summary>
+        [Test]
+        public void BindNullToNullNestedProperty()
+        {
             _view.Bind(this, "Text", _viewModel, "Outer.Inner");
         }
 
-		/// <summary>
-		/// Binding to unreadable properties is not permitted.
-		/// </summary>
-		[Test]
+        /// <summary>
+        /// Binding to unreadable properties is not permitted.
+        /// </summary>
+        [Test]
 		[ExpectedException(typeof(ArgumentException),
 			ExpectedMessage = "A source property must be readable.\r\nParameter name: sourceProperty")]
 		public void CannotBindUnreadableProperty()

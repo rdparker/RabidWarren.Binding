@@ -74,6 +74,35 @@ namespace RabidWarren.Binding
                     if (elts[1] == "CanWrite")
                         return Register(type, name, Find(type, elts[0]).Set != null);
                 }
+
+                if (elts.Length >= 2)
+                {
+                    var outer = Find(type, elts[0]);
+                    var innerProperty = string.Join(".", elts.Skip(1));
+                    var outerGet = outer.Get;
+                    var outerType = outer.Type;
+
+                    var inner = Find(outerType, innerProperty);
+                    var innerGet = inner.Get;
+                    var innerSet = inner.Set;
+                    var innerType = inner.Type;
+
+                    metadata = new PropertyMetadata
+                    {
+                        Type = innerType,
+                        Name = name,
+                        Get = o => innerGet(outerGet(o))
+                    };
+
+                    metadata.Set = MakeNotifyingSetter(
+                        name,
+                        metadata.Get,
+                        (o, value) => innerSet(outerGet(o), value));
+
+                    Registry.Add(type, metadata);
+
+                    return metadata;
+                }
             }
 
             // If it was found, cache the discovered information in the registry.
@@ -201,14 +230,17 @@ namespace RabidWarren.Binding
 
             // Otherwise, create a setter that guards against setting the property to the same value in case the
             // underlying setter does not do so.
-            return (propertyOwner, value) =>
+            return (owner, value) =>
             {
-                var owner = propertyOwner;
-                if (value.Equals(getter(owner)))
+                var oldValue = getter(owner);
+                if (value == null)
                 {
-                    return;
+                    if (oldValue == null)
+                        return;
                 }
-
+                else if (value.Equals(oldValue))
+                    return;
+                
                 setter(owner, value);
             };
         }

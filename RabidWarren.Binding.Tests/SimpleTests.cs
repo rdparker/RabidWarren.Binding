@@ -93,8 +93,9 @@
         [Test]
         public void BindToNestedProperty()
         {
-            _viewModel.Text = "Nested";
             _view.Bind("Outer.Inner", _viewModel, "Text");
+            _viewModel.Text = "Nested";
+            Assert.AreEqual("Nested", _view.Outer.Inner);
         }
 
         /// <summary>

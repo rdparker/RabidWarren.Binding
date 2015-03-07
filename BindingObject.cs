@@ -9,11 +9,13 @@
 
 namespace RabidWarren.Binding
 {
+    using Collections.Generic;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
-    using Collections.Generic;
+    using System.Linq.Expressions;
+
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary> Represents an object that binds its properties to other objects. </summary>
@@ -126,6 +128,15 @@ namespace RabidWarren.Binding
             Bind(this, property, source, sourceProperty);
         }
 
+        public void Bind<TTarget, TTargetValue, TSource, TSourceValue>(
+            Expression<Func<TTarget, TTargetValue>> targetExpression,
+            TSource sourceObject, Expression<Func<TTarget, TSourceValue>> sourceExpression)
+            where TTarget : INotifyPropertyChanged
+            where TSource : INotifyPropertyChanged
+        {
+            throw new NotImplementedException();
+        }
+
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Binds the specified target property to the specified source property using the source object
@@ -218,6 +229,15 @@ namespace RabidWarren.Binding
             // Note: If more than one target is bound to the same source, some target's will receive multiple
             //       notifications.
             SourcePropertyChangedHandler(sourceNotifiable, new PropertyChangedEventArgs(sourceProperty));
+        }
+
+        public void Bind<TTarget, TTargetValue, TSource, TSourceValue>(
+            TTarget targetObject, Expression<Func<TTarget, TTargetValue>> targetExpression,
+            TSource sourceObject, Expression<Func<TSource, TSourceValue>> sourceExpression)
+            where TTarget : INotifyPropertyChanged
+            where TSource : INotifyPropertyChanged
+        {
+            throw new NotImplementedException();
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -350,6 +370,20 @@ namespace RabidWarren.Binding
                     }
                 }
             }
+        }
+    }
+
+    public static class BindingObjectExtensions
+    {
+        public static void Bind<TTarget, TTargetValue, TSource, TSourceValue>
+            (this TTarget target,
+            Expression<Func<TTarget, TTargetValue>> targetProperty,
+            TSource source,
+            Expression<Func<TSource, TSourceValue>> sourceProperty)
+            where TTarget : INotifyPropertyChanged
+            where TSource : INotifyPropertyChanged
+        {
+            throw new NotImplementedException();
         }
     }
 }

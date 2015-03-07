@@ -9,15 +9,13 @@
 
 namespace RabidWarren.Binding
 {
-    using Collections.Generic;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Linq.Expressions;
-    using System.Reflection;
-
-
+    using Collections.Generic;
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary> Represents an object that binds its properties to other objects. </summary>
@@ -130,15 +128,6 @@ namespace RabidWarren.Binding
             Bind(this, property, source, sourceProperty);
         }
 
-        public void Bind<TTarget, TTargetValue, TSource, TSourceValue>(
-            Expression<Func<TTarget, TTargetValue>> targetExpression,
-            TSource sourceObject, Expression<Func<TTarget, TSourceValue>> sourceExpression)
-            where TTarget : INotifyPropertyChanged
-            where TSource : INotifyPropertyChanged
-        {
-            throw new NotImplementedException();
-        }
-
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Binds the specified target property to the specified source property using the source object
@@ -232,32 +221,57 @@ namespace RabidWarren.Binding
             //       notifications.
             SourcePropertyChangedHandler(sourceNotifiable, new PropertyChangedEventArgs(sourceProperty));
         }
-
+        
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Binds a target object property to a source object property using expressions.
+        /// </summary>
+        /// <typeparam name="TTarget">      The type of the target object. </typeparam>
+        /// <typeparam name="TTargetValue"> The type of the target property. </typeparam>
+        /// <typeparam name="TSource">      The type of the source object. </typeparam>
+        /// <typeparam name="TSourceValue"> The type of the source property. </typeparam>
+        /// <param name="targetObject">     The target object. </param>
+        /// <param name="targetExpression"> An expression from the target object to the target
+        ///                                 property. </param>
+        /// <param name="sourceObject">     The source object. </param>
+        /// <param name="sourceExpression"> An expression from the source object to the source
+        ///                                 property. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public void Bind<TTarget, TTargetValue, TSource, TSourceValue>(
-            TTarget targetObject, Expression<Func<TTarget, TTargetValue>> targetExpression,
-            TSource sourceObject, Expression<Func<TSource, TSourceValue>> sourceExpression)
+            TTarget targetObject,
+            Expression<Func<TTarget, TTargetValue>> targetExpression,
+            TSource sourceObject,
+            Expression<Func<TSource, TSourceValue>> sourceExpression)
             where TTarget : INotifyPropertyChanged
             where TSource : INotifyPropertyChanged
         {
-            var targetProperty = GetMemberInfo(targetExpression).Name;
-            var sourceProperty = GetMemberInfo(sourceExpression).Name;
+            var targetProperty = GetMemberName(targetExpression);
+            var sourceProperty = GetMemberName(sourceExpression);
 
             Bind(targetObject, targetProperty, sourceObject, sourceProperty);
         }
 
-        internal static MemberInfo GetMemberInfo(Expression expression)
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Gets the name of a member specified by an expression.
+        /// </summary>
+        /// <param name="expression"> The expression that specifies the member. </param>
+        /// <returns> The member name. </returns>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        internal static string GetMemberName(Expression expression)
         {
             switch (expression.NodeType)
             {
-                case ExpressionType.Convert:
-                case ExpressionType.ConvertChecked:
-                    return GetMemberInfo(((UnaryExpression)expression).Operand);
-
                 case ExpressionType.Lambda:
-                    return GetMemberInfo(((LambdaExpression)expression).Body);
+                    return GetMemberName(((LambdaExpression)expression).Body);
 
                 case ExpressionType.MemberAccess:
-                    return ((MemberExpression)expression).Member;
+                    MemberExpression me = (MemberExpression)expression;
+                    var parent = GetMemberName(me.Expression);
+                    return (parent == string.Empty) ? me.Member.Name : parent + "." + me.Member.Name;
+
+                case ExpressionType.Parameter:
+                    return string.Empty;
 
                 default:
                     throw new NotSupportedException(
@@ -398,18 +412,43 @@ namespace RabidWarren.Binding
         }
     }
 
+    /// <summary>
+    /// Contains binding-related extension methods.
+    /// </summary>
+    [SuppressMessage("CSharp.Maintainability", "SA1402", Justification = 
+        "The extension makes the most sense in the context of the class whose methods it supplements..")]
+    [SuppressMessage("CSharp.Ordering", "SA1204", Justification =
+        "This extension is secondary to the class above and should therefore be located after it.")]
     public static class BindingObjectExtensions
     {
-        public static void Bind<TTarget, TTargetValue, TSource, TSourceValue>
-            (this TTarget target,
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Binds a target object property to a source object property using expressions.
+        /// </summary>
+        /// <remarks> 
+        /// This is used when a binding is established outside of the target objects code.  Such as happens
+        /// when a WPF Window makes a call to bind a View property to a View Model property. </remarks>
+        /// <typeparam name="TTarget">      The type of the target object. </typeparam>
+        /// <typeparam name="TTargetValue"> The type of the target property. </typeparam>
+        /// <typeparam name="TSource">      The type of the source object. </typeparam>
+        /// <typeparam name="TSourceValue"> The type of the source property. </typeparam>
+        /// <param name="target">           The target object. </param>
+        /// <param name="targetProperty">   An expression from the target object to the target
+        ///                                 property. </param>
+        /// <param name="source">           The source object. </param>
+        /// <param name="sourceProperty">   An expression from the source object to the source
+        ///                                 property. </param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        public static void Bind<TTarget, TTargetValue, TSource, TSourceValue>(
+            this TTarget target,
             Expression<Func<TTarget, TTargetValue>> targetProperty,
             TSource source,
             Expression<Func<TSource, TSourceValue>> sourceProperty)
             where TTarget : BindingObject
             where TSource : INotifyPropertyChanged
         {
-            var targetName  = BindingObject.GetMemberInfo(targetProperty).Name;
-            var sourceName = BindingObject.GetMemberInfo(sourceProperty).Name;
+            var targetName = BindingObject.GetMemberName(targetProperty);
+            var sourceName = BindingObject.GetMemberName(sourceProperty);
 
             target.Bind(targetName, source, sourceName);
         }

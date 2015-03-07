@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExceptionTests.cs" />
+    <Compile Include="Expressions\ExpressionExceptions.cs" />
     <Compile Include="Expressions\SimpleExpressionTests.cs" />
     <Compile Include="Expressions\SourceObjectExpressionTests.cs" />
     <Compile Include="NestedNotifiable.cs" />

@@ -29,7 +29,7 @@
         }
 
         /// <summary>
-        /// Tests that a 4 argument Bind call returns without exception, when the source property is initialized.
+        /// Tests that a 4-argument Bind call returns without exception, when the source property is initialized.
         /// </summary>
         [Test]
         public void BindReturns4Arg()

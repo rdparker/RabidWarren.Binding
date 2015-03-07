@@ -15,6 +15,8 @@ namespace RabidWarren.Binding
     using System.ComponentModel;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Reflection;
+
 
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,7 +239,30 @@ namespace RabidWarren.Binding
             where TTarget : INotifyPropertyChanged
             where TSource : INotifyPropertyChanged
         {
-            throw new NotImplementedException();
+            var targetProperty = GetMemberInfo(targetExpression).Name;
+            var sourceProperty = GetMemberInfo(sourceExpression).Name;
+
+            Bind(targetObject, targetProperty, sourceObject, sourceProperty);
+        }
+
+        internal static MemberInfo GetMemberInfo(Expression expression)
+        {
+            switch (expression.NodeType)
+            {
+                case ExpressionType.Convert:
+                case ExpressionType.ConvertChecked:
+                    return GetMemberInfo(((UnaryExpression)expression).Operand);
+
+                case ExpressionType.Lambda:
+                    return GetMemberInfo(((LambdaExpression)expression).Body);
+
+                case ExpressionType.MemberAccess:
+                    return ((MemberExpression)expression).Member;
+
+                default:
+                    throw new NotSupportedException(
+                        string.Format("Unsupported expression type: '{0}'", expression.NodeType));
+            }
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,10 +405,13 @@ namespace RabidWarren.Binding
             Expression<Func<TTarget, TTargetValue>> targetProperty,
             TSource source,
             Expression<Func<TSource, TSourceValue>> sourceProperty)
-            where TTarget : INotifyPropertyChanged
+            where TTarget : BindingObject
             where TSource : INotifyPropertyChanged
         {
-            throw new NotImplementedException();
+            var targetName  = BindingObject.GetMemberInfo(targetProperty).Name;
+            var sourceName = BindingObject.GetMemberInfo(sourceProperty).Name;
+
+            target.Bind(targetName, source, sourceName);
         }
     }
 }

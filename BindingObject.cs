@@ -273,6 +273,22 @@ namespace RabidWarren.Binding
                 case ExpressionType.Parameter:
                     return string.Empty;
 
+                case ExpressionType.Call:
+                    var call = (MethodCallExpression)expression;
+                    var name = call.Method.Name;
+
+                    // Handle the CanWrite pseudo-property.
+                    //
+                    // Note: There is no CanRead pseudo-property when binding expressions because the member cannot
+                    //       be read to get to the fake CanRead() method, which is needed at compile time.
+                    if (name == "CanWrite")
+                    {
+                        return GetMemberName(call.Arguments[0]) + "." + name;
+                    }
+
+                    throw new NotSupportedException(
+                        string.Format("Unsupported method call '{0}' in expression", name));
+
                 default:
                     throw new NotSupportedException(
                         string.Format("Unsupported expression type: '{0}'", expression.NodeType));
@@ -415,9 +431,11 @@ namespace RabidWarren.Binding
     /// <summary>
     /// Contains binding-related extension methods.
     /// </summary>
-    [SuppressMessage("CSharp.Maintainability", "SA1402", Justification = 
-        "The extension makes the most sense in the context of the class whose methods it supplements..")]
-    [SuppressMessage("CSharp.Ordering", "SA1204", Justification =
+    [SuppressMessage("Microsoft.StyleCop.CSharp.MaintainabilityRules", "SA1402:FileMayOnlyContainASingleClass",
+        Justification = 
+        "The extension makes the most sense in the context of the class whose methods it supplements.")]
+    [SuppressMessage("Microsoft.StyleCop.CSharp.OrderingRules", 
+        "SA1204:StaticElementsMustAppearBeforeInstanceElements", Justification =
         "This extension is secondary to the class above and should therefore be located after it.")]
     public static class BindingObjectExtensions
     {
@@ -451,6 +469,19 @@ namespace RabidWarren.Binding
             var sourceName = BindingObject.GetMemberName(sourceProperty);
 
             target.Bind(targetName, source, sourceName);
+        }
+
+        /// <summary>
+        /// Does nothing.  This method is used to check whether or not a property can be read when using property
+        /// binding expressions.  However, it is never really called because the binding mechanism replaces it with
+        /// a constant value.
+        /// </summary>
+        /// <param name="property"> The property whose writable state is being checked. </param>
+        /// <exception cref="InvalidOperationException"> Thrown if this function is called at runtime. </exception>
+        /// <returns>Nothing.  Calling this function at runtime will result in an exception. </returns>
+        public static bool CanWrite(this object property)
+        {
+            throw new InvalidOperationException("The CanWrite method should never be called directly.");
         }
     }
 }

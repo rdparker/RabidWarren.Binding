@@ -43,7 +43,6 @@
     <Compile Include="ConverterRegistry.cs" />
     <Compile Include="Exception\Exception.cs" />
     <Compile Include="Exception\InvalidConversionException.cs" />
-    <Compile Include="Extensions.cs" />
     <Compile Include="IBindingConverter.cs" />
     <Compile Include="IntegerConverter.cs" />
     <Compile Include="INotifyingObject.cs" />

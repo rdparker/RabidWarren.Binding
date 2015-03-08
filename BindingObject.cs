@@ -476,10 +476,11 @@ namespace RabidWarren.Binding
         /// binding expressions.  However, it is never really called because the binding mechanism replaces it with
         /// a constant value.
         /// </summary>
+        /// <typeparam name="TProperty">    The type of the property</typeparam>
         /// <param name="property"> The property whose writable state is being checked. </param>
         /// <exception cref="InvalidOperationException"> Thrown if this function is called at runtime. </exception>
         /// <returns>Nothing.  Calling this function at runtime will result in an exception. </returns>
-        public static bool CanWrite(this object property)
+        public static bool CanWrite<TProperty>(this TProperty property)
         {
             throw new InvalidOperationException("The CanWrite method should never be called directly.");
         }

@@ -1,21 +1,109 @@
 RabidWarren.Binding Design Notes
 ================================
 
-The RabidWarren.Binding library is meant to provide support for binding
-properties between components in a Portable Class Library (PCL) environment.
-The common use case is to bind View Model properties to View properties.
+The RabidWarren.Binding (RWB) library is meant to provide support for
+binding properties between components in a Portable Class Library
+(PCL) environment.  The common use case is to bind View Model
+properties to View properties.
 
-Binding to an ungettable property is not permitted.  While some control systems
-have set-only values and while set-only properties can be created, in effect
-they are little more than commands or triggers, and therefore are treated as
-invalid property binding targets.
+Binding to an ungettable property is not permitted.  While some
+control systems have set-only values and while set-only properties can
+be created, in effect they are little more than commands or triggers,
+and therefore are treated as invalid property binding targets.
 
-Originally, support for binding to nested properties was planned.  However,
-unless the nested property's direct parent implements INotifyPropertyChanged
-in cooperation with the parent, there is no way to trigger bound updates when
-the property is changed outside the binding mechanism.
+Originally there was a ParameterType property for
+BindingConverterAttributes.  But, they were removed because they were
+not usable in the form in which they existed and there was no
+immediate need for them.  They may return in the future.
 
-Originally there was a ParameterType property for BindingConverterAttributes.
-But, they were removed because they were not usable in the form in which they
-existed form and there was no immediate need for them.  They may return in the
-future.
+Support for binding to nested properties was planned but was removed
+at one point.  The reason is that unless the nested property's direct
+parent implements INotifyPropertyChanged in cooperation with the
+parent, there is no way to trigger bound updates when the property is
+changed outside the binding mechanism.  Later it was restored but it
+is the caller's responsibility to connect to the appropriate event and
+call fire the property changed event with the nested property path.
+
+WPF Dependency Properties
+-------------------------
+
+There are several parts which go into implementing dependency
+properties.
+
+  1. DependencyObjects
+  2. DependencyProperties
+  3. Properties
+  4. Events
+
+A DependencyObject may have several DependencyProperties.  Each
+DependencyProperty is backed by a standard property and has an event,
+which is fired when the DependencyProperty changes.
+
+RabidWarren.Binding has no direct knowledge about DependencyProperty,
+DependencyObject, or the events associated with them.  It only knows
+about the properties themselves.
+
+Therefore, a generic way of dealing with objects that do not implement
+INotifyPropertyChanged needs to be created.
+
+What is needed is a way to pass in a type which may have bindable
+properties, such as DependencyObject, which will then allow
+RabidWarren.Binding to deal with statements like
+
+  aBindingObject.Bind(anINotifyingObject,
+		      ino => ino.aDependencyObject,
+		      aviewModel,
+		      vm => vm.aProperty);
+
+It would be nice to be able to have this automatically bind to the
+appropriate property of the DependencyObject, but it may be sufficient
+to support something like:
+
+
+  aBindingObject.Bind(anINotifyingObject,
+		      ino => ino.aDependencyObject.aDependecyProperty,
+		      aviewModel,
+		      vm => vm.aProperty);
+
+No matter which version is implemented, the OnPropertyChangedEvent
+will be automatically called by RabidWarren.Binding without the client
+having to add its own event handlers to forward notifications to
+OnPropertyChangedEvent.  This will require some way of telling RWB how
+to attach to a DependencyObject event in order to observe changes for
+a specific DependencyProperty.
+
+The same mechanism should support a single event handler for multiple
+properties such as what INotifyPropertyChanged does itself.  A
+possible interface may look like:
+
+  Bindable.RegisterBindableType(
+      typeof(DependencyObject),
+      s => s + "Changed",
+      s => s + "ChangedEventArgs");
+      
+or
+
+  Bindable.RegisterBindableType<DependencyObject>(
+      s => s + "Changed",
+      s => s + "ChangedEventArgs");
+
+The second form would more resemble ReactiveUI, but if default
+property registration is implemented it should be symmetrical with
+that.  Hera are a couple possibilities for implementing default
+property registration:
+
+  Bindable.RegisterDefaultProperty<TextBox>(tb => tb.Text);
+  Bindable.RegisterDefaultProperty<TextBox>(
+      tb => tb.Text,
+      tb => tb.IsEnabled);
+
+or
+
+  Bindable.RegisterDefaultProperty(
+      typeof(TextBox),
+      tb => tb.Text,
+      tb => tb.IsEnabled);
+
+The first may not be possible since <TextBox> is provided as an
+explicit template parameter and I think the type of the property
+specification, such as tb => tb.Text, could not be inferred.

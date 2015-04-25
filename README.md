@@ -60,13 +60,15 @@ to bind a set of WPF TextBoxes to various types of ViewModel properties.
 This could be accomplished using this Bind function:
 
 ```c#
-void Bind<T>(Expression<Func<MainWindow, TextBox>> target, Expression<Func<ViewModel, T>> source)
+void Bind<T>(Expression<Func<MainWindow, TextBox>> target,
+             Expression<Func<ViewModel, T>> source)
 {
 	var textBox = target.Compile().Invoke(this);
 	var textProperty = textBox.Name + ".Text";
 	
 	_binding.Bind(this, target.Compose(tb => tb.Text), _viewModel, source);
-	_binding.Bind(this, target.Compose(tb => tb.IsEnabled), _viewModel, source.Compose(s => s.CanWrite()));
+	_binding.Bind(this, target.Compose(tb => tb.IsEnabled),
+	              _viewModel, source.Compose(s => s.CanWrite()));
 
 	textBox.TextChanged +=
 		(object sender, TextChangedEventArgs e) => OnPropertyChangedEvent(textProperty);
@@ -107,5 +109,5 @@ status of a property does not change at run time.
 
 ## TODO
 
-Implement an add-on library for automatically binding to DependencyProperties
+* Implement an add-on library for automatically binding to DependencyProperties
 and similar framework types.

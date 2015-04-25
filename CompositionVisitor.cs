@@ -1,4 +1,14 @@
-﻿namespace RabidWarren.Binding
+﻿// -----------------------------------------------------------------------
+//  <copyright file="CompositionVisitor.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+//  </copyright>
+//  <summary>
+//   Provides an ExpressionVisitor which composes a parent expression
+//   with a child expression.
+//  </summary>
+// -----------------------------------------------------------------------
+
+namespace RabidWarren.Binding
 {
     using System;
     using System.Collections.Generic;
@@ -6,18 +16,42 @@
     using System.Linq;
     using System.Linq.Expressions;
 
+    /// <summary>
+    /// An ExpressionVisitor which composes a parent expression with a child expression.
+    /// </summary>
+    /// <typeparam name="TGrandparent">The parent expression parameter type.</typeparam>
+    /// <typeparam name="TParent">The parent expression value type and child expression parameter type.</typeparam>
+    /// <typeparam name="TChild">The child expression value type.</typeparam>
     class CompositionVisitor<TGrandparent, TParent, TChild> : ExpressionVisitor
     {
+        /// <summary>
+        /// The parent expression.
+        /// </summary>
         Expression<Func<TGrandparent, TParent>> Parent { get; set; }
+
+        /// <summary>
+        /// The child expression.
+        /// </summary>
         Expression<Func<TParent, TChild>> Child { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompositionVisitor{TGrandparent, TParent, TChild}"/> class.
+        /// </summary>
+        /// <param name="parent">The parent expression.</param>
+        /// <param name="child">The child expression.</param>
         CompositionVisitor(Expression<Func<TGrandparent, TParent>> parent, Expression<Func<TParent, TChild>> child)
         {
             Parent = parent;
             Child = child;
         }
 
-        public static Expression<Func<TGrandparent, TChild>> Visit(
+        /// <summary>
+        /// Composes two expressions using a <see cref="CompositionVisitor{TGrandparent, TParent, TChild}"/>.
+        /// </summary>
+        /// <param name="parent">The parent expression.</param>
+        /// <param name="child">The child expression.</param>
+        /// <returns>The composition of <paramref name="parent"/> and <paramref name="child"/>.</returns>
+        public static Expression<Func<TGrandparent, TChild>> Compose(
             Expression<Func<TGrandparent, TParent>> parent, Expression<Func<TParent, TChild>> child)
         {
             var visitor = new CompositionVisitor<TGrandparent, TParent, TChild>(parent, child);
@@ -25,6 +59,15 @@
             return (Expression<Func<TGrandparent, TChild>>)visitor.Visit(child);
         }
 
+        /// <summary>
+        /// Visits the children of the <see cref="Expression{TDelegate}"/>, replacing the parameters of
+        /// <see cref="Child"/>, with <see cref="Parent"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the delegate.</typeparam>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>
+        /// The modified expression, if it or any subexpression was modified; otherwise, returns the
+        /// original expression.</returns>
         protected override Expression VisitLambda<T>(Expression<T> node)
         {
             if (ReferenceEquals(node, Child))
@@ -33,6 +76,15 @@
             return base.VisitLambda<T>(node);
         }
 
+        /// <summary>
+        /// Visits the children of the <see cref="MemberExpression"/>, composing references to <see cref="Child"/>
+        /// with <see cref="Parent"/>.
+        /// </summary>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>
+        /// The modified expression, if it or any subexpression was modified; otherwise, returns the
+        /// original expression.
+        /// </returns>
         protected override Expression VisitMember(MemberExpression node)
         {
             var childBody = Child.Body;
@@ -49,7 +101,8 @@
         /// </summary>
         /// <param name="node">The expression to visit.</param>
         /// <returns>
-        /// The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.
+        /// The modified expression, if it or any subexpression was modified; otherwise, returns the
+        /// original expression.
         /// </returns>
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {

@@ -9,14 +9,14 @@
       
       Actually it appears that most of the tags are broken and I had to build the nuget CommandLine project from
       source to get the fixes that are pending in 3.0.0.  It was at commit 86a4b0fb, when I did this. -->
-      $title$
+      RabidWarren.Binding
     </title>
-    <authors>$author$</authors>
-    <owners>$author$</owners>
+    <authors>Ron Parker</authors>
+    <owners>Ron Parker</owners>
     <licenseUrl>https://raw.githubusercontent.com/rdparker/RabidWarren.Binding/master/COPYING</licenseUrl>
     <projectUrl>https://github.com/rdparker/RabidWarren.Binding</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>$description$</description>
+    <description>A Property binding system implemented in a Portable Class Library</description>
     <copyright>Copyright 2014, 2015 Ron Parker &lt;rdparker@gmail.com&gt;</copyright>
   </metadata>
 </package>

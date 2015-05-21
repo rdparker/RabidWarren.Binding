@@ -1,11 +1,12 @@
 ﻿// -----------------------------------------------------------------------
 //  <copyright file="AssemblyInfo.cs" company="Ron Parker">
-//   Copyright 2014 Ron Parker
+//   Copyright 2014, 2015 Ron Parker
 //  </copyright>
 //  <summary>
 //   Defines the Binding assembly.
 //  </summary>
 // -----------------------------------------------------------------------
+using System;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
@@ -24,6 +25,11 @@ using System.Runtime.CompilerServices;
 [assembly: NeutralResourcesLanguage("en")]
 [assembly: InternalsVisibleTo("RabidWarren.Binding.Tests")]
 
+// Setting CLSCompliant marks the assembly as being compliant with the Common
+// Language Specification (CLS), meaning this assembly can be used by any
+// language.
+[assembly: CLSCompliant(true)]
+
 // Version information for an assembly consists of the following four values:
 //
 //      Major Version
@@ -34,4 +40,4 @@ using System.Runtime.CompilerServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.1.*")]
+[assembly: AssemblyVersion("1.0.2.*")]

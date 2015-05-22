@@ -25,16 +25,6 @@ namespace RabidWarren.Binding
     class CompositionVisitor<TGrandparent, TParent, TChild> : ExpressionVisitor
     {
         /// <summary>
-        /// The parent expression.
-        /// </summary>
-        Expression<Func<TGrandparent, TParent>> Parent { get; set; }
-
-        /// <summary>
-        /// The child expression.
-        /// </summary>
-        Expression<Func<TParent, TChild>> Child { get; set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="CompositionVisitor{TGrandparent, TParent, TChild}"/> class.
         /// </summary>
         /// <param name="parent">The parent expression.</param>
@@ -44,6 +34,16 @@ namespace RabidWarren.Binding
             Parent = parent;
             Child = child;
         }
+
+        /// <summary>
+        /// Gets or sets the parent expression.
+        /// </summary>
+        Expression<Func<TGrandparent, TParent>> Parent { get; set; }
+
+        /// <summary>
+        /// Gets or sets the child expression.
+        /// </summary>
+        Expression<Func<TParent, TChild>> Child { get; set; }
 
         /// <summary>
         /// Composes two expressions using a <see cref="CompositionVisitor{TGrandparent, TParent, TChild}"/>.
@@ -118,30 +118,6 @@ namespace RabidWarren.Binding
         }
 
         /// <summary>
-        /// Replaces any parameter usage in the expression list with <paramref name="parent"/>, effectively chaining
-        /// or composing the two.
-        /// </summary>
-        /// <param name="parent">
-        /// The parent expression to use in replacing naked parameters in the expression list.
-        /// </param>
-        /// <param name="arguments">
-        /// A list of Expressions, which make up the arguments of a method call.
-        /// </param>
-        /// <returns>
-        /// The modified expression list, if any element or subexpression was modified; otherwise returns the original
-        /// expression list.
-        /// </returns>
-        private ReadOnlyCollection<Expression> ChainParameters(Expression parent, ReadOnlyCollection<Expression> arguments)
-        {
-            if (arguments.All(x => x.NodeType != ExpressionType.Parameter))
-                return arguments;
-
-            var newArgs = arguments.Select(x => x.NodeType == ExpressionType.Parameter ? parent : x);
-
-            return new ReadOnlyCollection<Expression>(newArgs.ToList());
-        }
-
-        /// <summary>
         /// Visits the children of the Expression list.
         /// </summary>
         /// <param name="original">The list of Expressions to visit.</param>
@@ -169,6 +145,30 @@ namespace RabidWarren.Binding
                 return new ReadOnlyCollection<Expression>(list);
 
             return original;
+        }
+
+        /// <summary>
+        /// Replaces any parameter usage in the expression list with <paramref name="parent"/>, effectively chaining
+        /// or composing the two.
+        /// </summary>
+        /// <param name="parent">
+        /// The parent expression to use in replacing naked parameters in the expression list.
+        /// </param>
+        /// <param name="arguments">
+        /// A list of Expressions, which make up the arguments of a method call.
+        /// </param>
+        /// <returns>
+        /// The modified expression list, if any element or subexpression was modified; otherwise returns the original
+        /// expression list.
+        /// </returns>
+        private ReadOnlyCollection<Expression> ChainParameters(Expression parent, ReadOnlyCollection<Expression> arguments)
+        {
+            if (arguments.All(x => x.NodeType != ExpressionType.Parameter))
+                return arguments;
+
+            var newArgs = arguments.Select(x => x.NodeType == ExpressionType.Parameter ? parent : x);
+
+            return new ReadOnlyCollection<Expression>(newArgs.ToList());
         }
     }
 }

@@ -18,14 +18,14 @@ namespace RabidWarren.Binding
     public static class ComposeMethods
     {
         /// <summary>
-        /// Composes the <see cref="parent"/> expression with the child expression.
+        /// Composes the parent expression with the child expression.
         /// </summary>
         /// <typeparam name="TGrandparent">The parent expression parameter type.</typeparam>
         /// <typeparam name="TParent">The parent expression value type and child expression parameter type.</typeparam>
         /// <typeparam name="TChild">The child expression value type.</typeparam>
         /// <param name="parent">The parent expression.</param>
         /// <param name="child">The child expression.</param>
-        /// <returns></returns>
+        /// <returns>The composed expression.</returns>
         public static Expression<Func<TGrandparent, TChild>> Compose<TGrandparent, TParent, TChild>(
             this Expression<Func<TGrandparent, TParent>> parent, Expression<Func<TParent, TChild>> child)
         {

@@ -11,14 +11,12 @@ namespace RabidWarren.Binding
 {
     using System;
 
-#pragma warning disable CS1574
     /// <summary>
     /// Declares the methods binding converter classes must implement.  They must also have the
     /// <see cref="BindingConverterAttribute"/>.  If they do not
-    /// <see cref="ConverterRegistry.RegisterAll()"/> will not find them.
+    /// <see cref="ConverterRegistry.RegisterAllConverters"/> will not find them.
     /// </summary>
     public abstract class BindingConverter : IBindingConverter
-#pragma warning restore CS1574
     {
         /// <summary>
         /// Specifies a value that is used by the binding system instead of null to indicate that a property has not

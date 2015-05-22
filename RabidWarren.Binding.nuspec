@@ -17,7 +17,9 @@
     <projectUrl>https://github.com/rdparker/RabidWarren.Binding</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A Property binding system implemented in a Portable Class Library</description>
-    <releaseNotes>Make CLS compliant.</releaseNotes>
+    <releaseNotes>
+      Make CLS compliant.
+      <p/>Fix StyleCop issues.</releaseNotes>
     <copyright>Copyright 2014, 2015 Ron Parker &lt;rdparker@gmail.com&gt;</copyright>
   </metadata>
 </package>

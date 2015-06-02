@@ -87,6 +87,10 @@
       <Project>{CF247E4C-0D4C-4493-8BBB-BE6AD6B7B079}</Project>
       <Name>RabidWarren.Binding</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RabidWarren.Binding.Tests.ConverterAssembly\RabidWarren.Binding.Tests.ConverterAssembly.csproj">
+      <Project>{63e03959-a3fb-46a8-978c-c93ebb147e5f}</Project>
+      <Name>RabidWarren.Binding.Tests.ConverterAssembly</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\NR6Pack.0.8.0\tools\analyzers\NR6Pack.dll" />

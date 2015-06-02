@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <title>
       <!-- Per http://nuget.codeplex.com/workitem/4013 the title tag is broken in the 2.8 series. The fix has
       been pulled into the mainline and will show up in 3.0.0.  
@@ -18,8 +18,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A Property binding system implemented in a Portable Class Library</description>
     <releaseNotes>
-      Make CLS compliant.
-      Fix StyleCop issues.
+      Fix a bug where calling ConverterRegistry.RegisterAllConverters directly would result in a
+      NullReferenceException.
     </releaseNotes>
     <copyright>Copyright 2014, 2015 Ron Parker &lt;rdparker@gmail.com&gt;</copyright>
   </metadata>

@@ -64,7 +64,7 @@
         /// RegisterAllConverters to be invoked on the assembly that contains ConverterRegistry.
         /// </summary>
         [Test]
-        public void ChickenAndEgg()
+        public void ChickenAndEggBug()
         {
             ConverterRegistry.RegisterAllConverters(typeof(TestConverter).Assembly); 
         }

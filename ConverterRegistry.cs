@@ -76,7 +76,7 @@ namespace RabidWarren.Binding
                           select new { binding.SourceType, binding.TargetType, converter };
 
             foreach (var entry in entries)
-                _registry.Add(
+                Registry.Add(
                     Tuple.Create(entry.SourceType, entry.TargetType),
                     entry.converter);
         }

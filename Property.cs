@@ -233,15 +233,8 @@ namespace RabidWarren.Binding
             return (owner, value) =>
             {
                 var oldValue = getter(owner);
-                if (value == null)
-                {
-                    if (oldValue == null)
-                        return;
-                }
-                else if (value.Equals(oldValue))
-                    return;
-                
-                setter(owner, value);
+                if ((value == null) ? (oldValue != null) : !value.Equals(oldValue))
+                    setter(owner, value);
             };
         }
 

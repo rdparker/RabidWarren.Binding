@@ -5,6 +5,7 @@
     /// <summary>
     /// Contains tests that pass a source object to the BindingObject constructor.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     class SourceObjectTests
     {
         View _view;

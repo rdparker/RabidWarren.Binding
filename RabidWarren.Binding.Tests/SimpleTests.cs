@@ -5,10 +5,11 @@
 	using System.ComponentModel;
 
 
-	/// <summary>
-	/// Contains tests that do not pass a source object to the BindingObject constructor.
-	/// </summary>
-	public class SimpleTests : INotifyPropertyChanged
+    /// <summary>
+    /// Contains tests that do not pass a source object to the BindingObject constructor.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    public class SimpleTests : INotifyPropertyChanged
     {
         View _view;
         ViewModel _viewModel;

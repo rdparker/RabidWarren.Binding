@@ -245,54 +245,10 @@ namespace RabidWarren.Binding
             where TTarget : INotifyPropertyChanged
             where TSource : INotifyPropertyChanged
         {
-            var targetProperty = GetMemberName(targetExpression);
-            var sourceProperty = GetMemberName(sourceExpression);
+            var targetProperty = targetExpression.GetMemberName();
+            var sourceProperty = sourceExpression.GetMemberName();
 
             Bind(targetObject, targetProperty, sourceObject, sourceProperty);
-        }
-
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// Gets the name of a member specified by an expression.
-        /// </summary>
-        /// <param name="expression"> The expression that specifies the member. </param>
-        /// <returns> The member name. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        internal static string GetMemberName(Expression expression)
-        {
-            switch (expression.NodeType)
-            {
-                case ExpressionType.Lambda:
-                    return GetMemberName(((LambdaExpression)expression).Body);
-
-                case ExpressionType.MemberAccess:
-                    MemberExpression me = (MemberExpression)expression;
-                    var parent = GetMemberName(me.Expression);
-                    return (parent == string.Empty) ? me.Member.Name : parent + "." + me.Member.Name;
-
-                case ExpressionType.Parameter:
-                    return string.Empty;
-
-                case ExpressionType.Call:
-                    var call = (MethodCallExpression)expression;
-                    var name = call.Method.Name;
-
-                    // Handle the CanWrite pseudo-property.
-                    //
-                    // Note: There is no CanRead pseudo-property when binding expressions because the member cannot
-                    //       be read to get to the fake CanRead() method, which is needed at compile time.
-                    if (name == "CanWrite")
-                    {
-                        return GetMemberName(call.Arguments[0]) + "." + name;
-                    }
-
-                    throw new NotSupportedException(
-                        string.Format("Unsupported method call '{0}' in expression", name));
-
-                default:
-                    throw new NotSupportedException(
-                        string.Format("Unsupported expression type: '{0}'", expression.NodeType));
-            }
         }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -465,8 +421,8 @@ namespace RabidWarren.Binding
             where TTarget : BindingObject
             where TSource : INotifyPropertyChanged
         {
-            var targetName = BindingObject.GetMemberName(targetProperty);
-            var sourceName = BindingObject.GetMemberName(sourceProperty);
+            var targetName = targetProperty.GetMemberName();
+            var sourceName = sourceProperty.GetMemberName();
 
             target.Bind(targetName, source, sourceName);
         }
@@ -483,6 +439,51 @@ namespace RabidWarren.Binding
         public static bool CanWrite<TProperty>(this TProperty property)
         {
             throw new InvalidOperationException("The CanWrite method should never be called directly.");
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Gets the name of a member specified by an expression.  This can be used for property binding
+        /// expressions or for passing around a property name without risking a mismatch in a string.
+        /// </summary>
+        /// <param name="expression"> The expression that specifies the member. </param>
+        /// <returns> The member name. </returns>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        public static string GetMemberName(this Expression expression)
+        {
+            switch (expression.NodeType)
+            {
+                case ExpressionType.Lambda:
+                    return GetMemberName(((LambdaExpression)expression).Body);
+
+                case ExpressionType.MemberAccess:
+                    MemberExpression me = (MemberExpression)expression;
+                    var parent = GetMemberName(me.Expression);
+                    return (parent == string.Empty) ? me.Member.Name : parent + "." + me.Member.Name;
+
+                case ExpressionType.Parameter:
+                    return string.Empty;
+
+                case ExpressionType.Call:
+                    var call = (MethodCallExpression)expression;
+                    var name = call.Method.Name;
+
+                    // Handle the CanWrite pseudo-property.
+                    //
+                    // Note: There is no CanRead pseudo-property when binding expressions because the member cannot
+                    //       be read to get to the fake CanRead() method, which is needed at compile time.
+                    if (name == "CanWrite")
+                    {
+                        return GetMemberName(call.Arguments[0]) + "." + name;
+                    }
+
+                    throw new NotSupportedException(
+                        string.Format("Unsupported method call '{0}' in expression", name));
+
+                default:
+                    throw new NotSupportedException(
+                        string.Format("Unsupported expression type: '{0}'", expression.NodeType));
+            }
         }
     }
 }

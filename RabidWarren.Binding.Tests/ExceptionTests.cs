@@ -3,6 +3,7 @@
     using NUnit.Framework;
     using System;
 
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     class ExceptionTests
     {
         class PropertiedClass : BindingObject

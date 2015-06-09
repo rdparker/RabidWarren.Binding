@@ -7,11 +7,12 @@
     /// <summary>
     /// Tests Properties that exist as explicit get and set methods.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     class PropertyMethodTests
     {
 		PropertiedClass _view;
-
-		class Settable : BindingObject
+        
+        class Settable : BindingObject
 		{
 			internal string _text;
 			

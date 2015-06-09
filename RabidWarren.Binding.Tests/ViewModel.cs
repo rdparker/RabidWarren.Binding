@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace RabidWarren.Binding.Tests
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     class ViewModel : NotifyingObject
     {
         int _number;

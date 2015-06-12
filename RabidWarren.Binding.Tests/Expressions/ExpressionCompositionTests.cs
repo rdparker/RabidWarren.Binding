@@ -10,14 +10,12 @@ using System.ComponentModel;
 
 namespace RabidWarren.Binding.Tests.Expressions
 {
-    class ExpressionCompositionTests : INotifyingObject
+    class ExpressionCompositionTests : NotifyingObject
     {
         private ViewModel _viewModel;
         private View _view;
 
         public bool IsWritable { get; set; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         [SetUp]
         public void Setup()
@@ -72,14 +70,6 @@ namespace RabidWarren.Binding.Tests.Expressions
                 o => o.IsWritable,
                 _viewModel,
                 source.Compose(s => s.Text.CanWrite()));
-        }
-
-        public void OnPropertyChangedEvent(string propertyName)
-        {
-            var notify = PropertyChanged;
-
-            if (notify != null)
-                notify(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

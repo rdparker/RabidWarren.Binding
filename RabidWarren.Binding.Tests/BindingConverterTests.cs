@@ -22,7 +22,9 @@
                 set
                 {
                     _number = value;
+#pragma warning disable 0618
                     OnPropertyChangedEvent("Number");
+#pragma warning restore 0618
                 }
             }
         }
@@ -41,7 +43,9 @@
                 set
                 {
                     _number = value;
+#pragma warning disable 0618
                     OnPropertyChangedEvent("Number");
+#pragma warning restore 0618
                 }
             }
         }

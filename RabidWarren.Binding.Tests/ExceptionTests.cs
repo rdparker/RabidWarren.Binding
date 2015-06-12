@@ -21,7 +21,9 @@
                 set
                 {
                     _text = value;
+#pragma warning disable 0618
                     OnPropertyChangedEvent("Text");
+#pragma warning restore 0618
                 }
             }
 
@@ -35,7 +37,9 @@
                 set
                 {
                     _boolean = value;
+#pragma warning disable 0618
                     OnPropertyChangedEvent("Boolean");
+#pragma warning restore 0618
                 }
             }
         }

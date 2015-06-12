@@ -19,8 +19,10 @@
 			public void set_Text(string value)
 			{
 				_text = value;
-				OnPropertyChangedEvent("Number");
-			}
+#pragma warning disable 0618
+                OnPropertyChangedEvent("Number");
+#pragma warning restore 0618
+            }
 		}
 
 		class PropertiedClass : Settable

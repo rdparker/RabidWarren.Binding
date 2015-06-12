@@ -446,8 +446,8 @@ namespace RabidWarren.Binding
         /// Gets the name of a member specified by an expression.  This can be used for property binding
         /// expressions or for passing around a property name without risking a mismatch in a string.
         /// </summary>
-        /// <param name="expression"> The expression that specifies the member. </param>
-        /// <returns> The member name. </returns>
+        /// <param name="expression">   The expression that specifies the member. </param>
+        /// <returns>                   The member name. </returns>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static string GetMemberName(this Expression expression)
         {
@@ -470,7 +470,7 @@ namespace RabidWarren.Binding
 
                     // Handle the CanWrite pseudo-property.
                     //
-                    // Note: There is no CanRead pseudo-property when binding expressions because the member cannot
+                    // Note: There is no CanRead pseudo-property in binding expressions because the member cannot
                     //       be read to get to the fake CanRead() method, which is needed at compile time.
                     if (name == "CanWrite")
                     {
@@ -483,6 +483,57 @@ namespace RabidWarren.Binding
                 default:
                     throw new NotSupportedException(
                         string.Format("Unsupported expression type: '{0}'", expression.NodeType));
+            }
+        }
+
+        /// <summary>
+        /// Gets the value of an object's property given a property expression.
+        /// </summary>
+        /// <typeparam name="TObject">   The type of the object.</typeparam>
+        /// <typeparam name="TProperty"> The type of its property.</typeparam>
+        /// <param name="obj">           The object.</param>
+        /// <param name="property">      The property expression.  These are generally of the form
+        ///                              <code>() => Property</code>.</param>
+        /// <returns>                    The property value.</returns>
+        public static TProperty GetProperty<TObject, TProperty>(
+            this TObject obj, Expression<Func<TProperty>> property)
+            where TObject : INotifyingObject
+            where TProperty : class
+        {
+            var name = property.GetMemberName();
+            var values = from p in typeof(TObject).GetProperties()
+                         where p.Name == name
+                         select p.GetValue(obj, null);
+
+            return (TProperty)values.Single();
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// If the value of the property specified by the expression is different than the new value passed in, the
+        /// given setter will be called and the appropriate PropertyChanged notification will be sent.
+        /// </summary>
+        /// <typeparam name="TObject">      The type of the object containing the property.</typeparam>
+        /// <typeparam name="TProperty">    The properties value type.</typeparam>
+        /// <param name="obj">              The object.</param>
+        /// <param name="property">         The property expression.  These are generally of the form 
+        ///                                 <code>() => Property</code>.</param>
+        /// <param name="newValue">         The new value for the property.</param>
+        /// <param name="setter">           The action which stores the property.  Often something like
+        ///                                 <code>v => field = v</code>.</param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        public static void SetProperty<TObject, TProperty>(
+            this TObject obj, Expression<Func<TProperty>> property, TProperty newValue, Action<TProperty> setter)
+            where TObject : INotifyingObject
+            where TProperty : class
+        {
+            var p = obj.GetProperty(property);
+
+            if (p != newValue)
+            {
+                setter(newValue);
+
+                obj.RaisePropertyChanged(property);
             }
         }
     }

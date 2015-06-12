@@ -30,7 +30,9 @@ namespace RabidWarren.Binding.Tests
             set
             {
                 _number = value;
+#pragma warning disable 0618
                 OnPropertyChangedEvent("Number");
+#pragma warning restore 0618
             }
         }
 
@@ -45,7 +47,9 @@ namespace RabidWarren.Binding.Tests
             set
             {
                 _text = value;
+#pragma warning disable 0618
                 OnPropertyChangedEvent("Text");
+#pragma warning restore 0618
             }
         }
 

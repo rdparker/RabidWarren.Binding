@@ -438,7 +438,9 @@ namespace RabidWarren.Binding
                 }
 
                 setter(owner, (TValue)value);
+#pragma warning disable 0618
                 ((INotifyingObject)propertyOwner).OnPropertyChangedEvent(name);
+#pragma warning restore 0618
             };
         }
 

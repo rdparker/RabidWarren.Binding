@@ -25,7 +25,9 @@ namespace RabidWarren.Binding.Tests
             set
             {
                 _text = value;
+#pragma warning disable 0618
                 OnPropertyChangedEvent("Text");
+#pragma warning restore 0618
             }
         }
 
@@ -39,7 +41,9 @@ namespace RabidWarren.Binding.Tests
             set
             {
                 _text2 = value;
+#pragma warning disable 0618
                 OnPropertyChangedEvent("Text2");
+#pragma warning restore 0618
             }
         }
 
@@ -52,7 +56,9 @@ namespace RabidWarren.Binding.Tests
         {
             private get { return "Some Text"; }
 
+#pragma warning disable 0618
             set { OnPropertyChangedEvent("UnreadableText"); }
+#pragma warning restore 0618
         }
 
         public OuterClass Outer
@@ -73,7 +79,9 @@ namespace RabidWarren.Binding.Tests
             set
             {
                 _number = value;
+#pragma warning disable 0618
                 OnPropertyChangedEvent("Number");
+#pragma warning restore 0618
             }
         }
 

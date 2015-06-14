@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>1.0.3</version>
+    <version>2.0.0-prerelease</version>
     <title>
       <!-- Per http://nuget.codeplex.com/workitem/4013 the title tag is broken in the 2.8 series. The fix has
       been pulled into the mainline and will show up in 3.0.0.  
@@ -18,8 +18,33 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A Property binding system implemented in a Portable Class Library</description>
     <releaseNotes>
-      Fix a bug where calling ConverterRegistry.RegisterAllConverters directly would result in a
-      NullReferenceException.
+The major addition of this version is support for using Property Expressions in the place of property name
+strings. This reduces the risk of mistyping property names and should catch most mismatches at compile time.
+The exception being similarly named properties.
+
+The OnPropertyChangedEvent method has been deprecated in favor of RaisePropertyChanged. This was a design
+decision to avoid confusion as to whether On... methods fire or handle an event. From now on Raise...
+methods will fire an event and On... methods will handle them.
+
+So given the two changes above calls like
+
+  OnPropertyChangedEvent("Text");
+  
+should be replaced with
+
+  RaisePropertyChanged(() => Text);
+
+Currently OnPropertyChangedEvent is deprecated.  It may be removed in version 3.0.0.
+
+Adding RaisePropertyChanged affects the INotifyingObject interface in a non-backward compatible manner, which is the
+reason for the major version bump to 2.0.0.
+
+The GetMemberName extension method was exposed publically so that user code could get the name of a property
+from a property expression.
+
+The GetProperty and SetProperty extension methods were added for getting and setting properties using
+property expressions to name them.  SetProperty also calls RaisePropertyChanged and a setter action if and
+only if the value being set is different from the existing value of the property.
     </releaseNotes>
     <copyright>Copyright 2014, 2015 Ron Parker &lt;rdparker@gmail.com&gt;</copyright>
   </metadata>

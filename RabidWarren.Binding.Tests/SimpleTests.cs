@@ -3,6 +3,7 @@
 	using NUnit.Framework;
 	using System;
 	using System.ComponentModel;
+    using System.Linq.Expressions;
 
 
     /// <summary>
@@ -53,6 +54,17 @@
             _view.Bind(_view, "Text", _viewModel, "Text");
 
             Assert.True(true);
+        }
+
+        /// <summary>
+        /// Tests getting a property name from a property expression.
+        /// </summary>
+        [Test]
+        public void GetMemberName()
+        {
+            Expression<Func<string>> propertyExpression = () => Text;
+
+            Assert.AreEqual("Text", propertyExpression.GetMemberName());
         }
 
         // Test the CanRead pseudo-property.

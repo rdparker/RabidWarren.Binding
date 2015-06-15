@@ -458,11 +458,15 @@ namespace RabidWarren.Binding
 
                 case ExpressionType.MemberAccess:
                     MemberExpression me = (MemberExpression)expression;
-                    var parent = GetMemberName(me.Expression);
-                    return (parent == string.Empty) ? me.Member.Name : parent + "." + me.Member.Name;
+                    var parentExpression = me.Expression;
 
-                case ExpressionType.Parameter:
-                    return string.Empty;
+                    if (parentExpression.NodeType == ExpressionType.Constant ||
+                        parentExpression.NodeType == ExpressionType.Parameter)
+                    {
+                        return me.Member.Name;
+                    }
+
+                    return parentExpression.GetMemberName() + "." + me.Member.Name;
 
                 case ExpressionType.Call:
                     var call = (MethodCallExpression)expression;
@@ -470,7 +474,7 @@ namespace RabidWarren.Binding
 
                     // Handle the CanWrite pseudo-property.
                     //
-                    // Note: There is no CanRead pseudo-property in binding expressions because the member cannot
+                    // Note: There is no CanRead pseudo-property when binding expressions because the member cannot
                     //       be read to get to the fake CanRead() method, which is needed at compile time.
                     if (name == "CanWrite")
                     {

@@ -14,46 +14,20 @@ namespace RabidWarren.Binding.Tests
 {
     public class NotifyingObjectTests
     {
-        private class ContainingObject : NotifyingObject
-        {
-            private string _name;
-
-            public string Name
-            {
-                get { return _name; }
-                set
-                {
-                    _name = value;
-                    RaisePropertyChanged(() => Name);
-                }
-            }
-
-            public string Address
-            {
-                get { return _address; }
-                set
-                {
-                    _address = value;
-                    RaisePropertyChanged("Address");
-                }
-            }
-
-            private string _address;
-        }
-
-        private readonly ContainingObject _testObject = new ContainingObject();
+        private readonly NotifyingTestClass _testObject = new NotifyingTestClass();
 
         [Test]
         public void RaisePropertyChangedViaPropertyExpressionTest()
         {
-            TestPropertyModification("Name", "Ron", () => _testObject.Name, v => { _testObject.Name = v; });
+            TestPropertyModification("RaisesByExpression", "Expression", () => _testObject.RaisesByExpression,
+                v => { _testObject.RaisesByExpression = v; });
         }
 
         [Test]
         public void RaisePropertyChangedViaStringTest()
         {
-            TestPropertyModification("Address", "Somewhere", () => _testObject.Address,
-                v => { _testObject.Address = v; });
+            TestPropertyModification("RaisesByString", "String", () => _testObject.RaisesByString,
+                v => { _testObject.RaisesByString = v; });
         }
 
         private void TestPropertyModification(string propertyName, string newValue, Func<string> getter,

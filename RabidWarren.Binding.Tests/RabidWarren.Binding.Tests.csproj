@@ -64,6 +64,7 @@
     <Compile Include="Expressions\ExpressionExceptions.cs" />
     <Compile Include="Expressions\SimpleExpressionTests.cs" />
     <Compile Include="Expressions\SourceObjectExpressionTests.cs" />
+    <Compile Include="NotifyingTestClass.cs" />
     <Compile Include="NestedNotifiable.cs" />
     <Compile Include="NotifyingObjectTests.cs" />
     <Compile Include="PropertyFieldTests.cs" />

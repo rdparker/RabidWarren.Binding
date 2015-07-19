@@ -35,5 +35,14 @@ namespace RabidWarren.Binding
         ///                                     <code>() => Property</code>.</param>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         void RaisePropertyChanged<TProperty>(Expression<Func<TProperty>> propertyExpression);
+
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Raises the PropertyChanged event for the named property.
+        /// </summary>
+        /// <param name="propertyName">         The property which changed.</param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        void RaisePropertyChanged(string propertyName);
     }
 }

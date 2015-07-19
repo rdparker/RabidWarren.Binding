@@ -51,10 +51,21 @@ namespace RabidWarren.Binding
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public void RaisePropertyChanged<TProperty>(Expression<Func<TProperty>> propertyExpression)
         {
+            RaisePropertyChanged(propertyExpression.GetMemberName());
+        }
+
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Raises the PropertyChanged event for the named property.
+        /// </summary>
+        /// <param name="propertyName">         The property which changed.</param>
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        public void RaisePropertyChanged(string propertyName)
+        {
             var handler = PropertyChanged;
 
             if (handler != null)
-                handler(this, new PropertyChangedEventArgs(propertyExpression.GetMemberName()));
+                handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

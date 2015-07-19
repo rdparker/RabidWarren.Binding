@@ -65,6 +65,7 @@
     <Compile Include="Expressions\SimpleExpressionTests.cs" />
     <Compile Include="Expressions\SourceObjectExpressionTests.cs" />
     <Compile Include="NestedNotifiable.cs" />
+    <Compile Include="NotifyingObjectTests.cs" />
     <Compile Include="PropertyFieldTests.cs" />
     <Compile Include="PropertyMethodTests.cs" />
     <Compile Include="BindingConverterTests.cs" />

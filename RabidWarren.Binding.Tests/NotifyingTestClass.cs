@@ -9,8 +9,8 @@ namespace RabidWarren.Binding.Tests
             get { return _raisesByExpression; }
             set
             {
+                this.SetProperty(() => RaisesByExpression, value, v => _raisesByExpression = v);
                 _raisesByExpression = value;
-                RaisePropertyChanged(() => RaisesByExpression);
             }
         }
 

@@ -77,42 +77,43 @@ namespace RabidWarren.Binding
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static string GetMemberName(this Expression expression)
         {
-            switch (expression.NodeType)
+            while (true)
             {
-                case ExpressionType.Lambda:
-                    return GetMemberName(((LambdaExpression) expression).Body);
+                switch (expression.NodeType)
+                {
+                    case ExpressionType.Lambda:
+                        expression = ((LambdaExpression) expression).Body;
+                        continue;
 
-                case ExpressionType.MemberAccess:
-                    var me = (MemberExpression) expression;
-                    var parentExpression = me.Expression;
+                    case ExpressionType.MemberAccess:
+                        var me = (MemberExpression) expression;
+                        var parentExpression = me.Expression;
 
-                    if (parentExpression.NodeType == ExpressionType.Constant ||
-                        parentExpression.NodeType == ExpressionType.Parameter)
-                    {
-                        return me.Member.Name;
-                    }
+                        if (parentExpression.NodeType == ExpressionType.Constant || parentExpression.NodeType == ExpressionType.Parameter)
+                        {
+                            return me.Member.Name;
+                        }
 
-                    return parentExpression.GetMemberName() + "." + me.Member.Name;
+                        return parentExpression.GetMemberName() + "." + me.Member.Name;
 
-                case ExpressionType.Call:
-                    var call = (MethodCallExpression) expression;
-                    var name = call.Method.Name;
+                    case ExpressionType.Call:
+                        var call = (MethodCallExpression) expression;
+                        var name = call.Method.Name;
 
-                    // Handle the CanWrite pseudo-property.
-                    //
-                    // Note: There is no CanRead pseudo-property when binding expressions because the member cannot
-                    //       be read to get to the fake CanRead() method, which is needed at compile time.
-                    if (name == "CanWrite")
-                    {
-                        return GetMemberName(call.Arguments[0]) + "." + name;
-                    }
+                        // Handle the CanWrite pseudo-property.
+                        //
+                        // Note: There is no CanRead pseudo-property when binding expressions because the member cannot
+                        //       be read to get to the fake CanRead() method, which is needed at compile time.
+                        if (name == "CanWrite")
+                        {
+                            return GetMemberName(call.Arguments[0]) + "." + name;
+                        }
 
-                    throw new NotSupportedException(
-                        string.Format("Unsupported method call '{0}' in expression", name));
+                        throw new NotSupportedException(string.Format("Unsupported method call '{0}' in expression", name));
 
-                default:
-                    throw new NotSupportedException(
-                        string.Format("Unsupported expression type: '{0}'", expression.NodeType));
+                    default:
+                        throw new NotSupportedException(string.Format("Unsupported expression type: '{0}'", expression.NodeType));
+                }
             }
         }
 

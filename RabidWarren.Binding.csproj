@@ -40,6 +40,7 @@
     <Compile Include="BindingConverterAttribute.cs" />
     <Compile Include="BindingConverter.cs" />
     <Compile Include="BindingObject.cs" />
+    <Compile Include="ExtensionMethods.cs" />
     <Compile Include="CompositionVisitor.cs" />
     <Compile Include="ConverterRegistry.cs" />
     <Compile Include="Exception\Exception.cs" />

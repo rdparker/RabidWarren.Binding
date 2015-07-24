@@ -66,7 +66,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="packages\NR6Pack.0.8.0\tools\analyzers\NR6Pack.dll" />
+    <Analyzer Include="packages\RefactoringEssentials.1.1.0\tools\analyzers\RefactoringEssentials.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="packages\StyleCop.MSBuild.4.7.49.1\build\StyleCop.MSBuild.Targets" Condition="Exists('packages\StyleCop.MSBuild.4.7.49.1\build\StyleCop.MSBuild.Targets')" />

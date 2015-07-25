@@ -41,15 +41,15 @@
     <Compile Include="BindingConverterAttribute.cs" />
     <Compile Include="BindingConverter.cs" />
     <Compile Include="BindingObject.cs" />
+    <Compile Include="Exception.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="CompositionVisitor.cs" />
     <Compile Include="ConverterRegistry.cs" />
-    <Compile Include="Exception\Exception.cs" />
-    <Compile Include="Exception\InvalidConversionException.cs" />
     <Compile Include="ComposeMethods.cs" />
     <Compile Include="IBindingConverter.cs" />
     <Compile Include="IntegerConverter.cs" />
     <Compile Include="INotifyingObject.cs" />
+    <Compile Include="InvalidConversionException.cs" />
     <Compile Include="NotifyingObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyMetadata.cs" />
@@ -66,6 +66,7 @@
       <HintPath>packages\RabidWarren.Collections.1.0.5499.35758\lib\portable-net45+sl50+win+wpa81+wp80+MonoAndroid10+xamarinios10+MonoTouch10\RabidWarren.Collections.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

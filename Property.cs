@@ -415,12 +415,10 @@ namespace RabidWarren.Binding
         ///
         /// <returns>   A notifying setter. </returns>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        [SuppressMessage("Potential Code Quality Issues", "CompareNonConstrainedGenericWithNullIssue",
-            Justification =
-            "The if in this function guards against generating a comparison against null for value types.")]
         static Action<object, object> MakeNotifyingSetter<TObject, TValue>(
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
+            where TValue : class
         {
             return (propertyOwner, value) =>
             {

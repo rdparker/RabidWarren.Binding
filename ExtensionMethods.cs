@@ -110,12 +110,10 @@ namespace RabidWarren.Binding
                             return GetMemberName(call.Arguments[0]) + "." + name;
                         }
 
-                        throw new NotSupportedException(string.Format("Unsupported method call '{0}' in expression",
-                            name));
+                        throw new NotSupportedException($"Unsupported method call '{name}' in expression");
 
                     default:
-                        throw new NotSupportedException(string.Format("Unsupported expression type: '{0}'",
-                            expression.NodeType));
+                        throw new NotSupportedException($"Unsupported expression type: '{expression.NodeType}'");
                 }
             }
         }

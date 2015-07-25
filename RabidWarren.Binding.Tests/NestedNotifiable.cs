@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="NestedNotifiable.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Defines the NestedNotifiable type.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests
 {
     using System.ComponentModel;
 

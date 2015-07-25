@@ -1,3 +1,12 @@
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="NotifyingTestClass.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Defines the NotifyingTestClass type.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
 namespace RabidWarren.Binding.Tests
 {
     internal class NotifyingTestClass : NotifyingObject

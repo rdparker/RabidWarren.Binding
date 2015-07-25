@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SourceObjectTests.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Contains tests that pass a source object to the BindingObject constructor.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests
 {
     using NUnit.Framework;
 

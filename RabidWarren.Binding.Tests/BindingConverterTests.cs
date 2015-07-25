@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="BindingConverterTests.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+//  <summary>
+//   Tests binding converters.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests
 {
     using System;
     using NUnit.Framework;

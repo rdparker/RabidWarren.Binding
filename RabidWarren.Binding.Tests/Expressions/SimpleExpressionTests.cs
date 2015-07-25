@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests.Expressions
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SimpleExpressionTests.cs" company="">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Contains simple property expression tests.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests.Expressions
 {
     using System.ComponentModel;
     using NUnit.Framework;

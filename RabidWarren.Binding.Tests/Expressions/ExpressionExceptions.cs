@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests.Expressions
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ExpressionExceptions.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Tests exceptions related to property expressions.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests.Expressions
 {
     using System;
     using NUnit.Framework;

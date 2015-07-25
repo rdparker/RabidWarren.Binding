@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="PropertyMethodTests.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Tests Properties that exist as explicit get and set methods.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests
 {
     using NUnit.Framework;
     using System;

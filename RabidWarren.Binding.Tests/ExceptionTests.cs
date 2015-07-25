@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ExceptionTests.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+//  <summary>
+//   Tests binding exceptions.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests
 {
     using NUnit.Framework;
     using System;

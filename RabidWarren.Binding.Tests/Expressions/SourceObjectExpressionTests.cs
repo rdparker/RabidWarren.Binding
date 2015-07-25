@@ -1,4 +1,13 @@
-﻿namespace RabidWarren.Binding.Tests.Expressions
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SourceObjectExpressionTests.cs" company="Ron Parker">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Contains tests that pass a source object to the BindingObject constructor.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace RabidWarren.Binding.Tests.Expressions
 {
     using NUnit.Framework;
 

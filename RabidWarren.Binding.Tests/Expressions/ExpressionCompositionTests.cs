@@ -1,4 +1,13 @@
-﻿using System;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ExpressionCompositionTests.cs" company="">
+//   Copyright 2015 Ron Parker
+// </copyright>
+// <summary>
+//   Tests expression composition.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

@@ -168,7 +168,7 @@ namespace RabidWarren.Binding
             var get = GetReflectedGetMethod(obj.GetType(), name);
 
             if (get == null)
-                throw new ArgumentException("Nonexistent property", "name");
+                throw new ArgumentException("Nonexistent property", nameof(name));
 
             return get(obj);
         }

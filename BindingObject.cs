@@ -176,13 +176,13 @@ namespace RabidWarren.Binding
             // Check pre-conditions.
             var targetType = targetNotifiable.GetType();
             if (Property.Find(targetType, targetProperty) == null)
-                throw new ArgumentException("Cannot bind to an unregistered property.", "targetProperty");
+                throw new ArgumentException("Cannot bind to an unregistered property.", nameof(targetProperty));
 
             var sourceMetadata = Property.Find(sourceNotifiable.GetType(), sourceProperty);
             if (sourceMetadata == null)
-                throw new ArgumentException("Cannot bind to an unregistered property.", "sourceProperty");
+                throw new ArgumentException("Cannot bind to an unregistered property.", nameof(sourceProperty));
             if (sourceMetadata.Get == null)
-                throw new ArgumentException("A source property must be readable.", "sourceProperty");
+                throw new ArgumentException("A source property must be readable.", nameof(sourceProperty));
 
             var noMatch = default(KeyValuePair<Tuple<INotifyPropertyChanged, string>, Tuple<INotifyPropertyChanged, string>>);
             var mappedTarget = _bindings.FirstOrDefault(
@@ -191,7 +191,7 @@ namespace RabidWarren.Binding
                     pair.Value.Item2 == targetProperty);
 
             if (!mappedTarget.Equals(noMatch))
-                throw new ArgumentException("A target property can only be bound once.", "targetProperty");
+                throw new ArgumentException("A target property can only be bound once.", nameof(targetProperty));
 
             // Make sure we have subscribed to the source's PropertyChanged notification.
             if (!_sourceObjects.Any(x => ReferenceEquals(x, sourceNotifiable)))
@@ -200,7 +200,7 @@ namespace RabidWarren.Binding
                 _sourceObjects.Add(sourceNotifiable);
             }
 
-            // Make sure we have subscribed to the targets's PropertyChanged notification.
+            // Make sure we have subscribed to the target's PropertyChanged notification.
             if (!_targetObjects.Any(x => ReferenceEquals(x, targetNotifiable)))
             {
                 targetNotifiable.PropertyChanged += TargetPropertyChangedHandler;
@@ -269,10 +269,8 @@ namespace RabidWarren.Binding
             var converterType = ConverterRegistry.Find(sourceType, targetInfo.Type);
 
             if (converterType == null)
-                throw new InvalidConversionException(string.Format(
-                    "No converter exists between {0} and {1}.",
-                    sourceType,
-                    targetInfo.Type));
+                throw new InvalidConversionException(
+                    $"No converter exists between {sourceType} and {targetInfo.Type}.");
 
             var converter = (BindingConverter)Activator.CreateInstance(converterType);
             var targetValue = converter.ConvertTo(value, targetInfo.Type, null);

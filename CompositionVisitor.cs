@@ -36,14 +36,14 @@ namespace RabidWarren.Binding
         }
 
         /// <summary>
-        /// Gets or sets the parent expression.
+        /// Gets the parent expression.
         /// </summary>
-        Expression<Func<TGrandparent, TParent>> Parent { get; set; }
+        Expression<Func<TGrandparent, TParent>> Parent { get; }
 
         /// <summary>
-        /// Gets or sets the child expression.
+        /// Gets the child expression.
         /// </summary>
-        Expression<Func<TParent, TChild>> Child { get; set; }
+        Expression<Func<TParent, TChild>> Child { get; }
 
         /// <summary>
         /// Composes two expressions using a <see cref="CompositionVisitor{TGrandparent, TParent, TChild}"/>.
@@ -73,7 +73,7 @@ namespace RabidWarren.Binding
             if (ReferenceEquals(node, Child))
                 return Expression.Lambda(Visit(Child.Body), VisitAndConvert(Parent.Parameters, "VisitLambda"));
 
-            return base.VisitLambda<T>(node);
+            return base.VisitLambda(node);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace RabidWarren.Binding
             var childBody = Child.Body;
 
             if (ReferenceEquals(node, childBody) && childBody.NodeType == ExpressionType.MemberAccess)
-                return Expression.MakeMemberAccess(Parent.Body, (childBody as MemberExpression).Member);
+                return Expression.MakeMemberAccess(Parent.Body, ((MemberExpression) childBody).Member);
 
             return base.VisitMember(node);
         }
@@ -125,7 +125,7 @@ namespace RabidWarren.Binding
         /// The modified expression list, if any element or subexpression was modified; otherwise, returns the
         /// original expression list.
         /// </returns>
-        protected virtual ReadOnlyCollection<Expression> VisitExpressionList(ReadOnlyCollection<Expression> original)
+        ReadOnlyCollection<Expression> VisitExpressionList(ReadOnlyCollection<Expression> original)
         {
             List<Expression> list = null;
             for (int i = 0, n = original.Count; i < n; i++)

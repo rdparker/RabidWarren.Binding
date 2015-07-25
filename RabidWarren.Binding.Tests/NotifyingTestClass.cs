@@ -9,9 +9,10 @@
 
 namespace RabidWarren.Binding.Tests
 {
-    internal class NotifyingTestClass : NotifyingObject
+    class NotifyingTestClass : NotifyingObject
     {
         string _raisesByExpression;
+        string _raisesByString;
 
         public string RaisesByExpression
         {
@@ -32,7 +33,5 @@ namespace RabidWarren.Binding.Tests
                 RaisePropertyChanged("RaisesByString");
             }
         }
-
-        string _raisesByString;
     }
 }

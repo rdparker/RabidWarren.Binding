@@ -36,8 +36,7 @@ namespace RabidWarren.Binding.Tests
 
             _testObject.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName == propertyName)
-                    raised = true;
+                raised |= args.PropertyName == propertyName;
             };
 
             setter(newValue);

@@ -68,7 +68,11 @@ namespace RabidWarren.Binding.Tests
             private get { return "Some Text"; }
 
 #pragma warning disable 0618
-            set { OnPropertyChangedEvent("UnreadableText"); }
+            set
+            {
+                _text = value;
+                OnPropertyChangedEvent("UnreadableText");
+            }
 #pragma warning restore 0618
         }
 

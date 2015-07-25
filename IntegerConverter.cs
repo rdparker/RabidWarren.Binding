@@ -10,11 +10,14 @@
 namespace RabidWarren.Binding
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Converts between <see cref="int"/> and <see cref="string"/>.
     /// </summary>
     [BindingConverter(typeof(int), typeof(string))]
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification =
+        "This converter is dynamically located by RabidWarren.Binding via the BindingConverterAttribute.")]
     public class IntegerConverter : BindingConverter
     {
         /// <summary>

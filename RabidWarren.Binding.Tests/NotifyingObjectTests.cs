@@ -14,7 +14,7 @@ namespace RabidWarren.Binding.Tests
 {
     public class NotifyingObjectTests
     {
-        private readonly NotifyingTestClass _testObject = new NotifyingTestClass();
+        readonly NotifyingTestClass _testObject = new NotifyingTestClass();
 
         [Test]
         public void RaisePropertyChangedViaPropertyExpressionTest()
@@ -30,8 +30,7 @@ namespace RabidWarren.Binding.Tests
                 v => { _testObject.RaisesByString = v; });
         }
 
-        private void TestPropertyModification(string propertyName, string newValue, Func<string> getter,
-            Action<string> setter)
+        void TestPropertyModification(string propertyName, string newValue, Func<string> getter, Action<string> setter)
         {
             var raised = false;
 

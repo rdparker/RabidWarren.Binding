@@ -161,7 +161,7 @@ namespace RabidWarren.Binding
         /// The modified expression list, if any element or subexpression was modified; otherwise returns the original
         /// expression list.
         /// </returns>
-        private ReadOnlyCollection<Expression> ChainParameters(Expression parent, ReadOnlyCollection<Expression> arguments)
+        ReadOnlyCollection<Expression> ChainParameters(Expression parent, ReadOnlyCollection<Expression> arguments)
         {
             if (arguments.All(x => x.NodeType != ExpressionType.Parameter))
                 return arguments;

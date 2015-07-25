@@ -12,8 +12,8 @@ namespace RabidWarren.Binding.Tests.Expressions
 {
     class ExpressionCompositionTests : NotifyingObject
     {
-        private ViewModel _viewModel;
-        private View _view;
+        ViewModel _viewModel;
+        View _view;
 
         public bool IsWritable { get; set; }
 

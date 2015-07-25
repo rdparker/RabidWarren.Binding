@@ -2,7 +2,7 @@ namespace RabidWarren.Binding.Tests
 {
     internal class NotifyingTestClass : NotifyingObject
     {
-        private string _raisesByExpression;
+        string _raisesByExpression;
 
         public string RaisesByExpression
         {
@@ -24,6 +24,6 @@ namespace RabidWarren.Binding.Tests
             }
         }
 
-        private string _raisesByString;
+        string _raisesByString;
     }
 }

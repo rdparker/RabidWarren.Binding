@@ -55,7 +55,7 @@ namespace RabidWarren.Binding
         public static PropertyMetadata Find(Type type, string name)
         {
             // Try to lookup the property in the registry.
-            var metadata = Registry.Find(type, name);
+            var metadata = FindInRegistry(type, name);
             if (metadata != null)
                 return metadata;
 
@@ -99,7 +99,7 @@ namespace RabidWarren.Binding
                         metadata.Get,
                         (o, value) => innerSet(outerGet(o), value));
 
-                    Registry.Add(type, metadata);
+                    AddToRegistry(type, metadata);
 
                     return metadata;
                 }
@@ -107,7 +107,7 @@ namespace RabidWarren.Binding
 
             // If it was found, cache the discovered information in the registry.
             if (metadata != null)
-                Registry.Add(type, metadata);
+                AddToRegistry(type, metadata);
 
             return metadata;
         }
@@ -196,7 +196,7 @@ namespace RabidWarren.Binding
                 Get = _ => value
             };
 
-            Registry.Add(type, metadata);
+            AddToRegistry(type, metadata);
 
             return metadata;
         }
@@ -442,61 +442,61 @@ namespace RabidWarren.Binding
             };
         }
 
+        #region PropertyRegistry
+
+        // Controls access to the property registry, enforcing singular registration of a property.
+
+        /// <summary>   Maps class names to lists of properties. </summary>
+        private static readonly Multimap<Type, PropertyMetadata> Registry = new Multimap<Type, PropertyMetadata>();
+
         /// <summary>
-        /// Controls access to the property registry, enforcing singular registration of a property.
+        /// Adds a property entry using the given type and property metadata.
         /// </summary>
-        public static class Registry
+        /// <exception cref="ArgumentException">Thrown when the given property has already been
+        /// registered.</exception>
+        /// <param name="type">The type of the object containing the property.</param>
+        /// <param name="metadata">The metadata that defines the property.</param>
+        internal static void AddToRegistry(Type type, PropertyMetadata metadata)
         {
-            /// <summary>   Maps class names to lists of properties. </summary>
-            static readonly Multimap<Type, PropertyMetadata> Entries = new Multimap<Type, PropertyMetadata>();
+            var name = metadata.Name;
 
-            /// <summary>
-            /// Adds a property entry using the given type and property metadata.
-            /// </summary>
-            /// <exception cref="ArgumentException">Thrown when the given property has already been
-            /// registered.</exception>
-            /// <param name="type">The type of the object containing the property.</param>
-            /// <param name="metadata">The metadata that defines the property.</param>
-            internal static void Add(Type type, PropertyMetadata metadata)
+            if (Contains(type, name))
             {
-                var name = metadata.Name;
+                var message = string.Format(
+                    "The {1}.{0} property has already been registered.",
+                    name,
+                    type.FullName);
 
-                if (Contains(type, name))
-                {
-                    var message = string.Format(
-                        "The {1}.{0} property has already been registered.",
-                        name,
-                        type.FullName);
-
-                    throw new ArgumentException(message);
-                }
-
-                Entries.Add(type, metadata);
+                throw new ArgumentException(message);
             }
 
-            /// <summary>
-            /// Finds the given registered property, if any.
-            /// </summary>
-            /// <param name="type">The type containing the property.</param>
-            /// <param name="name">The name of the property.</param>
-            /// <returns>The metadata describing the property.</returns>
-            internal static PropertyMetadata Find(Type type, string name)
-            {
-                ICollection<PropertyMetadata> values;
-
-                return Entries.TryGetValues(type, out values) ? values.FirstOrDefault(x => x.Name == name) : null;
-            }
-
-            /// <summary>
-            /// Checks if the given property exists in the registry.
-            /// </summary>
-            /// <param name="type">The type containing the property.</param>
-            /// <param name="name">The name of the property.</param>
-            /// <returns><c>true</c> if the property has been registered; otherwise <c>false.</c>.</returns>
-            internal static bool Contains(Type type, string name)
-            {
-                return Find(type, name) != null;
-            }
+            Registry.Add(type, metadata);
         }
+
+        /// <summary>
+        /// Finds the given registered property, if any.
+        /// </summary>
+        /// <param name="type">The type containing the property.</param>
+        /// <param name="name">The name of the property.</param>
+        /// <returns>The metadata describing the property.</returns>
+        internal static PropertyMetadata FindInRegistry(Type type, string name)
+        {
+            ICollection<PropertyMetadata> values;
+
+            return Registry.TryGetValues(type, out values) ? values.FirstOrDefault(x => x.Name == name) : null;
+        }
+
+        /// <summary>
+        /// Checks if the given property exists in the registry.
+        /// </summary>
+        /// <param name="type">The type containing the property.</param>
+        /// <param name="name">The name of the property.</param>
+        /// <returns><c>true</c> if the property has been registered; otherwise <c>false.</c>.</returns>
+        internal static bool Contains(Type type, string name)
+        {
+            return FindInRegistry(type, name) != null;
+        }
+
+        #endregion
     }
 }

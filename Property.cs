@@ -1,57 +1,45 @@
 ﻿// -----------------------------------------------------------------------
 //  <copyright file="Property.cs" company="Ron Parker">
-//   Copyright 20142 2015 Ron Parker
+//   Copyright 2014, 2015 Ron Parker
 //  </copyright>
 //  <summary>
 //   Maintains a registry of bindable properties definitions.  The property instances are tracked
 //   within the individual bindable objects.
 //  </summary>
 // ----------------------------------------------------------------------- 
+
 namespace RabidWarren.Binding
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using Collections.Generic;
 
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// Maintains a registry of property definitions for binding.  The property instances are tracked
-    /// within individual BindingObjects.
+    ///     Maintains a registry of property definitions for binding.  The property instances are tracked within
+    ///     individual BindingObjects.
     /// </summary>
-    ///
-    /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////
     public static class Property
     {
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Specifies the order of precedence when searching for properties via reflection.  NonPublic
-        /// properties are included because Visual Studio creates WPF controls as private fields.
+        ///     Specifies the order of precedence when searching for properties via reflection.  NonPublic properties
+        ///     are included because Visual Studio creates WPF controls as private fields.
         /// </summary>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         static readonly BindingFlags[] VisibilityPrecedence =
         {
-            BindingFlags.Static   | BindingFlags.Public,
+            BindingFlags.Static | BindingFlags.Public,
             BindingFlags.Instance | BindingFlags.Public,
-            BindingFlags.Static   | BindingFlags.NonPublic,
+            BindingFlags.Static | BindingFlags.NonPublic,
             BindingFlags.Instance | BindingFlags.NonPublic
         };
-        
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+
         /// <summary>
-        /// Finds the PropertyMetadata for the given type's named property.
+        ///     Finds the PropertyMetadata for the given type's named property.
         /// </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 12/24/2014. </remarks>
-        ///
         /// <param name="type"> The type of the object containing the property. </param>
         /// <param name="name"> The name of the property. </param>
-        ///
         /// <returns>   The property's metadata if the property exists; otherwise, <c>null</c>. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static PropertyMetadata Find(Type type, string name)
         {
             // Try to lookup the property in the registry.
@@ -65,20 +53,20 @@ namespace RabidWarren.Binding
             {
                 // Support the pseudo-properties, CanRead and CanWrite, similar to the same properties
                 // of PropertyInfo.
-                var elts = name.Split('.');
-                if (elts.Length == 2)
+                var namePath = name.Split('.');
+                if (namePath.Length == 2)
                 {
-                    if (elts[1] == "CanRead")
-                        return Register(type, name, Find(type, elts[0]).Get != null);
+                    if (namePath[1] == "CanRead")
+                        return Register(type, name, Find(type, namePath[0]).Get != null);
 
-                    if (elts[1] == "CanWrite")
-                        return Register(type, name, Find(type, elts[0]).Set != null);
+                    if (namePath[1] == "CanWrite")
+                        return Register(type, name, Find(type, namePath[0]).Set != null);
                 }
 
-                if (elts.Length >= 2)
+                if (namePath.Length >= 2)
                 {
-                    var outer = Find(type, elts[0]);
-                    var innerProperty = string.Join(".", elts.Skip(1));
+                    var outer = Find(type, namePath[0]);
+                    var innerProperty = string.Join(".", namePath.Skip(1));
                     var outerGet = outer.Get;
                     var outerType = outer.Type;
 
@@ -112,39 +100,29 @@ namespace RabidWarren.Binding
             return metadata;
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Gets a property's get method using reflection. </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
-        ///
         /// <param name="type"> The type of the object containing the property. </param>
         /// <param name="name"> The name of the property. </param>
-        ///
         /// <returns>
-        /// On success, the method or closure for getting the property; otherwise, <c>null</c>.
+        ///     On success, the method or closure for getting the property; otherwise, <c>null</c>.
         /// </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        public static Func<object, object> GetReflectedGetMethod(Type type, string name)
+        static Func<object, object> GetReflectedGetMethod(Type type, string name)
         {
             // Loop through visibility levels from most visible to least visible.
-            foreach (var visibility in VisibilityPrecedence)
+            foreach (var level in VisibilityPrecedence)
             {
                 // Prefer properties first.
-                PropertyInfo info = type.GetProperty(name, visibility);
-                if (info != null)
-                {
-                    var getter = info.GetGetMethod(visibility.HasFlag(BindingFlags.NonPublic));
-                    if (getter != null)
-                        return o => getter.Invoke(o, null);
-                }
+                var getter = type.GetProperty(name, level)?.GetGetMethod(level.HasFlag(BindingFlags.NonPublic));
+                if (getter != null)
+                    return o => getter.Invoke(o, null);
 
                 // Next come get methods.
-                var getMethod = type.GetMethod("get_" + name, visibility);
+                var getMethod = type.GetMethod("get_" + name, level);
                 if (getMethod != null)
                     return o => getMethod.Invoke(o, null);
 
                 // Finally, check for fields.
-                var field = type.GetField(name, visibility);
+                var field = type.GetField(name, level);
                 if (field != null)
                     return field.GetValue;
             }
@@ -153,16 +131,11 @@ namespace RabidWarren.Binding
             return null;
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Gets the value of a property using reflection. </summary>
-        ///
         /// <exception cref="ArgumentException">   Thrown when name does not specify a property.</exception>
-        ///
         /// <param name="obj">  The object the property belongs to. </param>
         /// <param name="name"> The property's name. </param>
-        ///
         /// <returns>   The property's value. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         internal static object GetReflected(object obj, string name)
         {
             var get = GetReflectedGetMethod(obj.GetType(), name);
@@ -173,25 +146,19 @@ namespace RabidWarren.Binding
             return get(obj);
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Registers the named property and a getter that returns a constant value for binding.
+        ///     Registers the named property and a getter that returns a constant value for binding.
         /// </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 12/27/2014. </remarks>
-        ///
         /// <typeparam name="TValue">   Type of the value. </typeparam>
         /// <param name="type">     The type of the object containing the property. </param>
         /// <param name="name">     The name of the property. </param>
         /// <param name="value">    The value to be returned from the getter. </param>
-        ///
         /// <returns>   The property metadata. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         internal static PropertyMetadata Register<TValue>(Type type, string name, TValue value)
         {
             var metadata = new PropertyMetadata
             {
-                Type = typeof(TValue),
+                Type = typeof (TValue),
                 Name = name,
                 Get = _ => value
             };
@@ -201,31 +168,29 @@ namespace RabidWarren.Binding
             return metadata;
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// If the <paramref name="ownerType"/> supports the <see cref="INotifyingObject"/> interface,
-        /// wrap the passed setter with logic for firing the PropertyChanged notification; otherwise, if
-        /// the property has a getter, only call the setter when the value really changes.
-        /// <para>
-        /// This form is used when the owner type cannot be inferred from the parameters, but must be
-        /// passed explicitly.  This occurs when the parameters are derived from
-        /// <see cref="PropertyInfo"/> resulting in generic object types being used for the getter and
-        /// setter.</para>
+        ///     If the <paramref name="ownerType" /> supports the <see cref="INotifyingObject" /> interface, wrap the
+        ///     passed setter with logic for firing the PropertyChanged notification; otherwise, if the property has a
+        ///     getter, only call the setter when the value really changes.
+        ///     <para>
+        ///         This form is used when the owner type cannot be inferred from the parameters, but must be passed
+        ///         explicitly.  This occurs when the parameters are derived from <see cref="PropertyInfo" /> resulting
+        ///         in generic object types being used for the getter and setter.
+        ///     </para>
         /// </summary>
-        ///
         /// <param name="ownerType">    Type of the owner. </param>
         /// <param name="name">         The name of the property. </param>
-        /// <param name="getter">       The function for getting the property's value from the object
-        ///                             that contains it. </param>
-        /// <param name="setter">       The unadorned function for setting the property's value on a
-        ///                             given object. </param>
-        ///
+        /// <param name="getter">
+        ///     The function for getting the property's value from the object that contains it.
+        /// </param>
+        /// <param name="setter">
+        ///     The unadorned function for setting the property's value on a given object.
+        /// </param>
         /// <returns>   The wrapped setter. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         static Action<object, object> MakeSmartSetter(
             Type ownerType, string name, Func<object, object> getter, Action<object, object> setter)
         {
-            if (typeof(INotifyingObject).IsAssignableFrom(ownerType))
+            if (typeof (INotifyingObject).IsAssignableFrom(ownerType))
                 return MakeNotifyingSetter(name, getter, setter);
 
             // Otherwise, create a setter that guards against setting the property to the same value in case the
@@ -233,50 +198,32 @@ namespace RabidWarren.Binding
             return (owner, value) =>
             {
                 var oldValue = getter(owner);
-                if ((value == null) ? (oldValue != null) : !value.Equals(oldValue))
+                if (!value?.Equals(oldValue) ?? (oldValue != null))
                     setter(owner, value);
             };
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Generates metadata by looking up PropertyInfo via reflection. </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
-        ///
         /// <param name="type"> The type of the object containing the property. </param>
         /// <param name="name"> The name of the property. </param>
-        ///
-        /// <returns>
-        /// The property metadata if property info was found by reflection; otherwise <c>null</c>.
-        /// </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <returns> The property metadata if property info was found by reflection; otherwise <c>null</c>. </returns>
         static PropertyMetadata FromPropertyInfo(Type type, string name)
         {
-            foreach (var visibility in VisibilityPrecedence)
-            {
-                PropertyInfo info = type.GetProperty(name, visibility);
-                if (info != null)
-                    return info.ToMetadata();
-            }
-
-            return null;
+            return (from visibility in VisibilityPrecedence
+                select type.GetProperty(name, visibility)
+                into info
+                where info != null
+                select info.ToMetadata()).FirstOrDefault();
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Generates metadata by looking up <c>get_*</c> and <c>set_*</c> methods via reflection.
+        ///     Generates metadata by looking up <c>get_*</c> and <c>set_*</c> methods via reflection.
         /// </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
-        ///
         /// <param name="type"> The type of the object containing the property. </param>
         /// <param name="name"> The name of the property. </param>
-        ///
         /// <returns>
-        /// The property metadata if at least one of the methods was found via reflection; otherwise,
-        /// <c>null</c>.
+        ///     The property metadata if at least one of the methods was found via reflection; otherwise, <c>null</c>.
         /// </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         static PropertyMetadata FromMethods(Type type, string name)
         {
             var metadata = new PropertyMetadata
@@ -284,10 +231,9 @@ namespace RabidWarren.Binding
                 Name = name
             };
 
-            // Find the get and set methods, if any.  These are looked up together because we never want to
-            // return one that has less visibility than the other, such as a private setter with a public
-            // getter.  The NonPublic one's are only looked up because Visual Studio creates WPF controls
-            // as private fields. 
+            // Find the get and set methods, if any.  These are looked up together because we never want to return one
+            // that has less visibility than the other, such as a private setter with a public getter.  The NonPublic
+            // one's are only looked up because Visual Studio creates WPF controls as private fields. 
             foreach (var visibility in VisibilityPrecedence)
             {
                 var getMethod = type.GetMethod("get_" + name, visibility);
@@ -300,7 +246,7 @@ namespace RabidWarren.Binding
                 var setMethod = type.GetMethod("set_" + name, visibility);
                 if (setMethod != null)
                 {
-                    metadata.Set = (o, value) => setMethod.Invoke(o, new[] { value });
+                    metadata.Set = (o, value) => setMethod.Invoke(o, new[] {value});
 
                     // If there is no getter, get the type from the setter's parameters.
                     if (metadata.Type == null)
@@ -318,57 +264,31 @@ namespace RabidWarren.Binding
             return metadata.Type == null ? null : metadata;
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Generates metadata by looking up fields via reflection. </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
-        ///
         /// <param name="type"> The type of the object containing the property. </param>
         /// <param name="name"> The name of the property. </param>
-        ///
-        /// <returns>
-        /// The property metadata if a matching field was found; otherwise, <c>null</c>.
-        /// </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <returns> The property metadata if a matching field was found; otherwise, <c>null</c>. </returns>
         static PropertyMetadata FromField(Type type, string name)
         {
-            var metadata = new PropertyMetadata
-            {
-                Name = name
-            };
-
-            FieldInfo field;
-            foreach (var visibility in VisibilityPrecedence)
-            {
-                field = type.GetField(name, visibility);
-
-                if (field != null)
+            return (from visibility in VisibilityPrecedence
+                select type.GetField(name, visibility)
+                into field
+                where field != null
+                select new PropertyMetadata
                 {
-                    return new PropertyMetadata
-                    {
-                        Type = field.FieldType,
-                        Name = name,
-                        Get = field.GetValue,
-                        Set = MakeSmartSetter(type, name, field.GetValue, field.SetValue)
-                    };
-                }
-            }
-
-            return null;
+                    Type = field.FieldType,
+                    Name = name,
+                    Get = field.GetValue,
+                    Set = MakeSmartSetter(type, name, field.GetValue, field.SetValue)
+                }).FirstOrDefault();
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// A PropertyInfo extension method that converts between PropertyInfo and
-        /// <see cref="PropertyMetadata"/>.
+        ///     A PropertyInfo extension method that converts between PropertyInfo and
+        ///     <see cref="PropertyMetadata" />.
         /// </summary>
-        ///
-        /// <remarks>   Last edited by Ron, 1/3/2015. </remarks>
-        ///
         /// <param name="property"> The property to act on. </param>
-        ///
         /// <returns>   property as a PropertyMetadata. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         static PropertyMetadata ToMetadata(this PropertyInfo property)
         {
             var name = property.Name;
@@ -378,17 +298,19 @@ namespace RabidWarren.Binding
 
             // Create a PropertyMetadata.Get function from the get method, if any.
             var getter =
-                getMethod == null ?
-                (Func<object, object>)null : o => getMethod.Invoke(o, null);
+                getMethod == null
+                    ? (Func<object, object>) null
+                    : o => getMethod.Invoke(o, null);
 
             // Create a PropertyMetadata.Set function from the set method, if any.
             Action<object, object> simpleSetter = null;
             if (setMethod != null)
-                simpleSetter = (o, value) => setMethod.Invoke(o, new[] { value });
+                simpleSetter = (o, value) => setMethod.Invoke(o, new[] {value});
 
-            Action<object, object> setter = 
-                getter == null ? simpleSetter :
-                simpleSetter == null ? null : MakeSmartSetter(ownerType, name, getter, simpleSetter);
+            var setter =
+                getter == null
+                    ? simpleSetter
+                    : simpleSetter == null ? null : MakeSmartSetter(ownerType, name, getter, simpleSetter);
 
             return new PropertyMetadata
             {
@@ -399,22 +321,17 @@ namespace RabidWarren.Binding
             };
         }
 
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Makes a notifying setter for objects that support the <see cref="INotifyingObject"/>
-        /// interface.
+        ///     Makes a notifying setter for objects that support the <see cref="INotifyingObject" /> interface.
         /// </summary>
-        ///
         /// <typeparam name="TObject">  The type of the object containing the property. </typeparam>
         /// <typeparam name="TValue">   The type of the property value. </typeparam>
         /// <param name="name">     The name of the property. </param>
-        /// <param name="getter">   The the function for getting the property's value from the object
-        ///                         that contains it. </param>
-        /// <param name="setter">   The the function for setting the property's value in the given
-        ///                         object. </param>
-        ///
+        /// <param name="getter">
+        ///     The the function for getting the property's value from the object that contains it.
+        /// </param>
+        /// <param name="setter">   The the function for setting the property's value in the given object. </param>
         /// <returns>   A notifying setter. </returns>
-        /// ////////////////////////////////////////////////////////////////////////////////////////////////
         static Action<object, object> MakeNotifyingSetter<TObject, TValue>(
             string name, Func<TObject, TValue> getter, Action<TObject, TValue> setter)
             where TObject : class
@@ -422,9 +339,9 @@ namespace RabidWarren.Binding
         {
             return (propertyOwner, value) =>
             {
-                var owner = (TObject)propertyOwner;
+                var owner = (TObject) propertyOwner;
 
-                TValue oldValue = getter(owner);
+                var oldValue = getter(owner);
                 if (value == null)
                 {
                     if (oldValue == null)
@@ -435,9 +352,9 @@ namespace RabidWarren.Binding
                     return;
                 }
 
-                setter(owner, (TValue)value);
+                setter(owner, (TValue) value);
 #pragma warning disable 0618
-                ((INotifyingObject)propertyOwner).OnPropertyChangedEvent(name);
+                ((INotifyingObject) propertyOwner).OnPropertyChangedEvent(name);
 #pragma warning restore 0618
             };
         }
@@ -447,39 +364,33 @@ namespace RabidWarren.Binding
         // Controls access to the property registry, enforcing singular registration of a property.
 
         /// <summary>   Maps class names to lists of properties. </summary>
-        private static readonly Multimap<Type, PropertyMetadata> Registry = new Multimap<Type, PropertyMetadata>();
+        static readonly Multimap<Type, PropertyMetadata> Registry = new Multimap<Type, PropertyMetadata>();
 
         /// <summary>
-        /// Adds a property entry using the given type and property metadata.
+        ///     Adds a property entry using the given type and property metadata.
         /// </summary>
-        /// <exception cref="ArgumentException">Thrown when the given property has already been
-        /// registered.</exception>
+        /// <exception cref="ArgumentException">
+        ///     Thrown when the given property has already been registered.
+        /// </exception>
         /// <param name="type">The type of the object containing the property.</param>
         /// <param name="metadata">The metadata that defines the property.</param>
-        internal static void AddToRegistry(Type type, PropertyMetadata metadata)
+        static void AddToRegistry(Type type, PropertyMetadata metadata)
         {
             var name = metadata.Name;
 
             if (Contains(type, name))
-            {
-                var message = string.Format(
-                    "The {1}.{0} property has already been registered.",
-                    name,
-                    type.FullName);
-
-                throw new ArgumentException(message);
-            }
+                throw new ArgumentException($"The {type.FullName}.{name} property has already been registered.");
 
             Registry.Add(type, metadata);
         }
 
         /// <summary>
-        /// Finds the given registered property, if any.
+        ///     Finds the given registered property, if any.
         /// </summary>
         /// <param name="type">The type containing the property.</param>
         /// <param name="name">The name of the property.</param>
         /// <returns>The metadata describing the property.</returns>
-        internal static PropertyMetadata FindInRegistry(Type type, string name)
+        static PropertyMetadata FindInRegistry(Type type, string name)
         {
             ICollection<PropertyMetadata> values;
 
@@ -487,12 +398,12 @@ namespace RabidWarren.Binding
         }
 
         /// <summary>
-        /// Checks if the given property exists in the registry.
+        ///     Checks if the given property exists in the registry.
         /// </summary>
         /// <param name="type">The type containing the property.</param>
         /// <param name="name">The name of the property.</param>
         /// <returns><c>true</c> if the property has been registered; otherwise <c>false.</c>.</returns>
-        internal static bool Contains(Type type, string name)
+        static bool Contains(Type type, string name)
         {
             return FindInRegistry(type, name) != null;
         }

@@ -60,7 +60,7 @@ namespace RabidWarren.Binding
         /// <summary>
         /// Initializes a new instance of the <see cref="BindingObject"/> class.
         /// </summary>
-        public BindingObject()
+        protected BindingObject()
         {
         }
 
@@ -68,13 +68,13 @@ namespace RabidWarren.Binding
         /// Initializes a new instance of the <see cref="BindingObject"/> class.
         /// </summary>
         /// <param name="sourceObject">The object which acts as a source for bound properties.</param>
-        public BindingObject(NotifyingObject sourceObject)
+        protected BindingObject(NotifyingObject sourceObject)
         {
             SourceObject = sourceObject;
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="BindingObject"/> class, unregistering it from all
+        /// Finalizes an instance of the <see cref="BindingObject"/> class, removing it from all
         /// <see cref="E:PropertyChanged"/> events.
         /// </summary>
         ~BindingObject()
@@ -95,7 +95,7 @@ namespace RabidWarren.Binding
         /// <summary>
         /// Gets the source object which is used by <see cref="M:Bind"/> calls which are not passed one.
         /// </summary>
-        public NotifyingObject SourceObject { get; private set; }
+        NotifyingObject SourceObject { get; }
 
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>

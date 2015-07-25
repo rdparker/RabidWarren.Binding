@@ -18,7 +18,7 @@ namespace RabidWarren.Binding
         /// Initializes a new instance of the <see cref="Exception"/> class.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public Exception(string message) : base(message)
+        protected Exception(string message) : base(message)
         {
         }
     }

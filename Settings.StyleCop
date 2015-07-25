@@ -1,3 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <StyleCopSettings Version="105">
   <Parsers>
     <Parser ParserId="StyleCop.CSharp.CsParser">
@@ -32,10 +33,20 @@
             <BooleanProperty Name="Enabled">False</BooleanProperty>
           </RuleSettings>
         </Rule>
+        <Rule Name="FileHeaderMustHaveCopyrightText">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="FileHeaderCopyrightTextMustMatch">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
       </Rules>
       <AnalyzerSettings>
         <StringProperty Name="CompanyName">Ron Parker</StringProperty>
-        <StringProperty Name="Copyright">Copyright 2015 Ron Parker</StringProperty>
+        <StringProperty Name="Copyright">Copyright $CREATED_YEAR$ Ron Parker</StringProperty>
       </AnalyzerSettings>
     </Analyzer>
     <Analyzer AnalyzerId="StyleCop.CSharp.MaintainabilityRules">

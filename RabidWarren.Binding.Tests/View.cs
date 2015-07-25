@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 
 namespace RabidWarren.Binding.Tests
 {
+    using System.Diagnostics.CodeAnalysis;
+
     class View : BindingObject
     {
         int _number;
@@ -62,6 +64,8 @@ namespace RabidWarren.Binding.Tests
             }
         }
 
+        [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification =
+            "This is dynamically bound and set at runtime, therefore ReSharper does not see the assignment.")]
         public string Text2 { get; set; }
 
         public OuterClass Outer
@@ -74,7 +78,9 @@ namespace RabidWarren.Binding.Tests
 
         public class OuterClass
         {
-            public string Inner;
+            [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification =
+                "This is dynamically bound and set at runtime, therefore ReSharper does not see the assignment.")]
+            public string Inner { get; set; }
         }
     }
 }

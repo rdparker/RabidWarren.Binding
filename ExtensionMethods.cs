@@ -7,14 +7,14 @@
 //  </summary>
 // -----------------------------------------------------------------------
 
-using System;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Linq.Expressions;
-
 namespace RabidWarren.Binding
 {
+    using System;
+    using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
+    using System.Linq.Expressions;
+
     /// <summary>
     ///     Contains binding-related extension methods.
     /// </summary>
@@ -89,7 +89,8 @@ namespace RabidWarren.Binding
                         var me = (MemberExpression) expression;
                         var parentExpression = me.Expression;
 
-                        if (parentExpression.NodeType == ExpressionType.Constant || parentExpression.NodeType == ExpressionType.Parameter)
+                        if (parentExpression.NodeType == ExpressionType.Constant ||
+                            parentExpression.NodeType == ExpressionType.Parameter)
                         {
                             return me.Member.Name;
                         }
@@ -109,10 +110,12 @@ namespace RabidWarren.Binding
                             return GetMemberName(call.Arguments[0]) + "." + name;
                         }
 
-                        throw new NotSupportedException(string.Format("Unsupported method call '{0}' in expression", name));
+                        throw new NotSupportedException(string.Format("Unsupported method call '{0}' in expression",
+                            name));
 
                     default:
-                        throw new NotSupportedException(string.Format("Unsupported expression type: '{0}'", expression.NodeType));
+                        throw new NotSupportedException(string.Format("Unsupported expression type: '{0}'",
+                            expression.NodeType));
                 }
             }
         }

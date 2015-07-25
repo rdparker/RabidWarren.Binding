@@ -29,7 +29,7 @@ namespace RabidWarren.Binding
         ///
         /// <value> The binding converter registry. </value>
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
-        public static Dictionary<Tuple<Type, Type>, Type> Registry
+        static Dictionary<Tuple<Type, Type>, Type> Registry
         {
             get
             {
@@ -95,7 +95,7 @@ namespace RabidWarren.Binding
         /// ////////////////////////////////////////////////////////////////////////////////////////////////
         public static Type Find(Type sourceType, Type targetType)
         {
-            Type converterType = null;
+            Type converterType;
 
             Registry.TryGetValue(Tuple.Create(sourceType, targetType), out converterType);
 
